@@ -1,0 +1,77 @@
+name: Policy T01-T04
+on:
+  push:
+    branches: [feat/policy-t01-t04]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: policy-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: flow_smoke
+          POSTGRES_USER: flow
+          POSTGRES_PASSWORD: ci-disposable-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U flow -d flow_smoke"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DB_URL: jdbc:postgresql://127.0.0.1:5432/flow_smoke
+      DB_USER: flow
+      DB_PASSWORD: ci-disposable-password
+      PGPASSWORD: ci-disposable-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+      - name: Backend PostgreSQL integration tests
+        run: mvn -B -ntp -f backend/pom.xml verify
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+          node --input-type=module -e "import{readFileSync}from'node:fs';import{gzipSync}from'node:zlib';console.log('FLOW_LOCK_GZIP='+gzipSync(readFileSync('package-lock.json')).toString('base64'))"
+      - name: Frontend API tests and production build
+        working-directory: frontend
+        run: |
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: T01-T04 real process restart test
+        run: node scripts/verify-restart.mjs
+      - name: Create isolated browser database
+        run: psql -h 127.0.0.1 -U flow -d flow_smoke -c 'CREATE DATABASE flow_browser;'
+      - name: Browser tests
+        working-directory: frontend
+        env:
+          DB_URL: jdbc:postgresql://127.0.0.1:5432/flow_browser
+        run: npm run test:e2e
+      - name: Validate Docker configuration
+        env:
+          POSTGRES_PASSWORD: ci-disposable-password
+        run: docker compose config --quiet
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: policy-test-evidence
+          path: |
+            backend/target/surefire-reports
+            test-results
+            frontend/playwright-report
+            frontend/test-results
+            frontend/package-lock.json

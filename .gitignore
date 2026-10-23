@@ -1,0 +1,14 @@
+.env
+node_modules/
+dist/
+target/
+playwright-report/
+test-results/
+*.log
+.idea/
+.vscode/
+.DS_Store
+pgdata/
+uploads/
+gui-preview.html
+map-preview.html
