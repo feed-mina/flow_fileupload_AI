@@ -1,7 +1,7 @@
 name: Policy T01-T04
 on:
   push:
-    branches: [feat/policy-t01-t04]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -43,9 +43,7 @@ jobs:
         run: mvn -B -ntp -f backend/pom.xml verify
       - name: Install frontend dependencies
         working-directory: frontend
-        run: |
-          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
-          node --input-type=module -e "import{readFileSync}from'node:fs';import{gzipSync}from'node:zlib';console.log('FLOW_LOCK_GZIP='+gzipSync(readFileSync('package-lock.json')).toString('base64'))"
+        run: npm ci --no-audit --no-fund
       - name: Frontend API tests and production build
         working-directory: frontend
         run: |

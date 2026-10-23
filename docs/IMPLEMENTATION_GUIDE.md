@@ -619,3 +619,20 @@ Ant Design을 우선 제안하고 shadcn/ui는 대안·디자인 참고, react-d
 미선택 7종 → 하나 선택 → 저장 성공·실패 → 새로고침 유지까지 React·Spring Boot·PostgreSQL을 연결하고 실제 증거를 기록한다.
 
 [이번 보고서 검수 기록](2026-10-23/flow-ui-research-20261023-105551-qa.md): 문서 정적 검사와 실제 브라우저·앱 시험을 구분합니다.
+
+## 20. T01~T04 구현 진행 — 2026-10-23
+
+후속 요청에 따라 [PR #1](https://github.com/feed-mina/flow_fileupload_AI/pull/1)에서 최초 상태·선택 저장·서버 재시작 유지·커스텀 추가를 구현한다. 19장의 파일 경로는 설계 후보이며, 이번 구현의 실제 위치는 다음과 같다.
+
+| 구분 | 실제 구현 |
+|---|---|
+| 화면·상태 | `frontend/src/App.jsx`, `frontend/src/usePolicy.js` |
+| API 클라이언트 | `frontend/src/lib/api.js` |
+| 서버 | `backend/src/main/java/dev/mina/flow/policy` |
+| 최초 데이터·제약 | `backend/src/main/resources/db/migration/V1__policy_schema.sql` |
+| 프록시·배포 | `frontend/nginx.conf`, `compose.yml` |
+| 검증 | `backend/src/test`, `frontend/e2e`, `scripts/verify-restart.mjs` |
+
+React + Ant Design, Spring Boot + JDBC, PostgreSQL + Flyway를 사용한다. 리서치 후보 중 shadcn·dropzone·TanStack Query는 이 작은 범위에 추가하지 않는다. 최초 조회 전 체크값을 임의로 표시하지 않으며, 정상 저장 응답 후에만 값을 확정한다.
+
+T03은 두 Java 프로세스를 실제로 종료·재실행하고 동일 PostgreSQL의 `exe=false`, `scr=true`, 버전과 행 ID를 비교한다. 임시 입력 정책과 미구현 범위는 [구현 계약](POLICY_SLICE.md), 실행된 검사와 제한은 [시험 결과](TEST_RESULTS.md), 실행 방법은 [README](../README.md)를 따른다. 전체 28개 시나리오와 108개 고려요소의 완료를 의미하지 않는다. 최소 시험 후 DEC를 검토하는 순서로 진행한다.
