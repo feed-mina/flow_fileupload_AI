@@ -46,4 +46,8 @@ public class PolicyRepository {
     public void advanceVersion() {
         jdbc.update("UPDATE policy_scope SET version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = 1");
     }
+
+    public int deleteCustom(long id) {
+        return jdbc.update("DELETE FROM extension_policy WHERE policy_id = 1 AND kind = 'CUSTOM' AND id = ?", id);
+    }
 }

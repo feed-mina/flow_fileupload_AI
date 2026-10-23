@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { addCustom, getPolicy, setFixed } from './lib/api.js';
+import { addCustom, deleteCustom, getPolicy, setFixed } from './lib/api.js';
 
 export function usePolicy() {
   const [policy, setPolicy] = useState(null);
@@ -68,5 +68,6 @@ export function usePolicy() {
     policy, loading, pending, error, notice, mustRefresh, refresh,
     updateFixed: (extension, enabled) => mutate(extension, (version) => setFixed(extension, enabled, version)),
     createCustom: (extension) => mutate('custom', (version) => addCustom(extension, version)),
+    removeCustom: (id) => mutate(`delete-${id}`, (version) => deleteCustom(id, version)),
   };
 }

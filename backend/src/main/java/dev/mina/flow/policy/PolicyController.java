@@ -29,6 +29,12 @@ public class PolicyController {
         return response(service.addCustom(request.extension(), ifMatch), HttpStatus.CREATED);
     }
 
+    @DeleteMapping("/custom/{id}")
+    public ResponseEntity<PolicyView> deleteCustom(@PathVariable long id,
+            @RequestHeader(value = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return response(service.deleteCustom(id, ifMatch), HttpStatus.OK);
+    }
+
     private ResponseEntity<PolicyView> response(PolicyView view, HttpStatus status) {
         return ResponseEntity.status(status).eTag("\"" + view.version() + "\"")
                 .header(HttpHeaders.CACHE_CONTROL, "no-store").body(view);

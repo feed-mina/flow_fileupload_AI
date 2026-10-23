@@ -46,13 +46,23 @@ public class PolicyService {
         return repository.snapshot();
     }
 
+    @Transactional
+    public PolicyView deleteCustom(long id, String ifMatch) {
+        checkVersion(repository.lockVersion(), ifMatch);
+        if (repository.deleteCustom(id) != 1) {
+            throw new PolicyException(HttpStatus.NOT_FOUND, "CUSTOM_NOT_FOUND", "삭제할 커스텀 확장자가 없습니다. 최신 규칙을 확인해 주세요.");
+        }
+        repository.advanceVersion();
+        return repository.snapshot();
+    }
+
     private String normalize(String input) {
         if (input == null) throw invalidExtension();
         String normalized = input.strip();
         if (normalized.startsWith(".")) normalized = normalized.substring(1);
-        normalized = normalized.toLowerCase(Locale.ROOT);
-        if (!normalized.matches("[a-z0-9]{1,20}")) throw invalidExtension();
-        return normalized;
+        // Validate the raw alphabet before Unicode case folding (Kelvin sign -> k).
+        if (!normalized.matches("[A-Za-z0-9]{1,20}")) throw invalidExtension();
+        return normalized.toLowerCase(Locale.ROOT);
     }
 
     private PolicyException invalidExtension() {
