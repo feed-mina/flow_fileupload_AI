@@ -109,10 +109,12 @@ class UploadApiTest {
     }
     @Test void realHttpParserEnforcesSizeAtOneByteBoundary() {
         for (int size : new int[]{10485759,10485760,10485761}) {
+            System.out.println("HTTP file boundary bytes=" + size);
             var parts = new LinkedMultiValueMap<String,Object>();
             parts.add("file",new ByteArrayResource(new byte[size]) { @Override public String getFilename(){return "boundary.txt";} });
             var headers = new HttpHeaders(); headers.setContentType(MediaType.MULTIPART_FORM_DATA);
             var response = rest.postForEntity("/api/uploads",new HttpEntity<>(parts,headers),String.class);
+            System.out.println("HTTP file boundary status=" + response.getStatusCode().value());
             assertThat(response.getStatusCode().value()).isEqualTo(size > 10485760 ? 413 : 201);
         }
     }

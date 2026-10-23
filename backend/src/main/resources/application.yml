@@ -20,6 +20,11 @@ spring:
 app:
   upload-root: ${UPLOAD_ROOT:./uploads}
 server:
+  tomcat:
+    # Consume a rejected body within the finite request envelope so a client
+    # can receive the JSON 413 rather than a broken pipe from the default 2 MiB.
+    max-swallow-size: 12MB
+    max-http-form-post-size: 12MB
   error:
     include-message: never
     include-stacktrace: never

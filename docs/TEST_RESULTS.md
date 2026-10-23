@@ -1,5 +1,14 @@
 # T01~T04 시험 결과
 
+## DEC 후속 검증 — PR #2
+
+- 로컬: Node API 6개 PASS. 삭제 요청·multipart 헤더·READY 판정 포함.
+- 새 서버 통합·파일 장애·경합·HTTP 크기 경계 및 브라우저 시험: CI 실행 중. 기존 PR #1 통과 결과와 혼동하지 않는다.
+- 실제 Docker 이미지 빌드·Compose 기동·공개 배포·컨테이너 재생성: 미실행.
+- 실행: https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39896452446
+
+아래는 PR #1의 기존 기록이다.
+
 작성일: 2026-10-23. 이 문서는 실제 실행과 계획을 구분합니다.
 
 | 검증 | 상태 | 근거 |

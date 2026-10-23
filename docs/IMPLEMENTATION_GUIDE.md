@@ -636,3 +636,11 @@ Ant Design을 우선 제안하고 shadcn/ui는 대안·디자인 참고, react-d
 React + Ant Design, Spring Boot + JDBC, PostgreSQL + Flyway를 사용한다. 리서치 후보 중 shadcn·dropzone·TanStack Query는 이 작은 범위에 추가하지 않는다. 최초 조회 전 체크값을 임의로 표시하지 않으며, 정상 저장 응답 후에만 값을 확정한다.
 
 T03은 두 Java 프로세스를 실제로 종료·재실행하고 동일 PostgreSQL의 `exe=false`, `scr=true`, 버전과 행 ID를 비교한다. 임시 입력 정책과 미구현 범위는 [구현 계약](POLICY_SLICE.md), 실행된 검사와 제한은 [시험 결과](TEST_RESULTS.md), 실행 방법은 [README](../README.md)를 따른다. 전체 28개 시나리오와 108개 고려요소의 완료를 의미하지 않는다. 최소 시험 후 DEC를 검토하는 순서로 진행한다.
+
+## 21. 검증·보안 DEC 채택과 후속 구현
+
+사용자의 권장초안 적용 요청에 따라 DEC-02~11을 구현 기준으로 채택하고 [PR #2](https://github.com/feed-mina/flow_fileupload_AI/pull/2)에 업로드·검증·저장과 커스텀 삭제를 추가한다. DEC-01의 공개 권한·격리 및 DEC-13의 보관 기간·전체 총량은 구체값이 없으므로 공개 전 보류 항목으로 남긴다. 이번 요청에 공개 배포는 포함하지 않는다.
+
+실제 구현은 `backend/.../upload`의 파일명 검사·스트리밍·트랜잭션 저장, `BrowserOriginFilter`의 브라우저 출처 검사, `V2__upload_metadata.sql`의 메타데이터, `frontend/src/UploadPanel.jsx`의 파일 전송·결과 표시다. `PolicyService.deleteCustom`은 기존 행 잠금·버전 비교를 함께 사용한다.
+
+원본명은 메타데이터로만 사용하고 본문은 UUID `.bin`으로 정적 경로 밖에 저장한다. DB 커밋 후에만 READY·201을 응답하며, 알려진 롤백에서 최종 파일을 정리한다. 강제 종료·커밋 결과 불명은 자동 삭제하지 않고 DB·파일 대조 절차를 따른다. [DEC 계약·시험 범위·운영 한계](DEC_IMPLEMENTATION.md)와 [실제 시험 결과](TEST_RESULTS.md)를 현재 상태의 기준으로 삼는다.

@@ -1,10 +1,10 @@
-# 파일 업로드 정책 — T01~T04
+# 파일 업로드 정책 — DEC 검증·저장
 
-**고정 확장자 선택과 커스텀 확장자를 PostgreSQL에 저장하고, 새로고침·서버 재시작 뒤에도 동일한 정책을 조회한다.**
+**확장자 정책을 PostgreSQL에 저장하고, 서버에서 검증한 업로드만 UUID 파일과 적용 정책 버전을 남긴다.**
 
 React 19 + Ant Design 6 화면이 Spring Boot 3.5 / Java 17의 JSON API를 호출합니다. PostgreSQL 17에 정책을 보관하고 Flyway로 최초 데이터를 한 번 생성합니다. Docker Compose로 화면·서버·DB를 실행하며 GitHub PR과 Actions에 변경 및 시험 근거를 남깁니다.
 
-이번 범위는 T01~T04입니다. 파일 업로드 차단 실행, 커스텀 삭제, 인증·사용자별 정책은 구현하지 않았습니다. 전체 과제 완료를 의미하지 않습니다.
+PR #1의 T01~T04에 이어 실제 업로드 차단·저장과 커스텀 삭제를 구현했습니다. [채택한 DEC와 구현 계약](docs/DEC_IMPLEMENTATION.md)을 기준으로 합니다. 인증·사용자별 격리, 보관 기간·전체 저장 한도가 아직 결정되지 않아 로컬 구성만 제공하며 공개 배포는 이번 범위에 포함하지 않습니다.
 
 ## 실행
 
@@ -25,7 +25,7 @@ docker compose down
 docker compose up -d
 ```
 
-이 명령은 `policy_data` 볼륨을 유지합니다. `down -v`는 데이터를 지우므로 재시작 시험에 사용하지 마세요. DB 암호를 최초 생성 이후 바꾸려면 기존 PostgreSQL 사용자 암호도 함께 관리해야 합니다.
+이 명령은 `policy_data` DB 볼륨과 `upload_data` 파일 볼륨을 유지합니다. `down -v`는 두 데이터를 모두 지우므로 재시작 시험에 사용하지 마세요. DB 암호를 최초 생성 이후 바꾸려면 기존 PostgreSQL 사용자 암호도 함께 관리해야 합니다. 실제 Docker 빌드·기동·컨테이너 재생성 검증은 TEST_RESULTS의 실행 상태를 확인하세요.
 
 ## 최소 시험
 
@@ -51,6 +51,7 @@ npx playwright install --with-deps chromium
 
 - [시험 결과와 실행 제한](docs/TEST_RESULTS.md)
 - [API 계약 및 임시 정책](docs/POLICY_SLICE.md)
+- [DEC 채택·업로드 계약·장애 후 대조](docs/DEC_IMPLEMENTATION.md)
 - [기존 구현 가이드](docs/IMPLEMENTATION_GUIDE.md)
 - [요청·진행 기록](docs/PROMPT_LOG.md)
 
@@ -65,3 +66,13 @@ npx playwright install --with-deps chromium
 | 검증 | `backend/src/test`, `frontend/e2e`, `scripts` | 실제 PostgreSQL·브라우저·프로세스 재시작 근거 분리 |
 
 작은 단일 화면에는 별도 상태관리 라이브러리를 추가하지 않고 React 훅으로 조회 취소·중복 저장 방지를 구현했습니다. shadcn 및 dropzone은 이번 범위에 도입하지 않았습니다. Spring 업로드 예제의 시작 시 디렉터리 삭제 로직도 사용하지 않습니다. Ant Design은 npm 패키지로 사용하며 소스 복사·라이선스 헤더 제거는 하지 않습니다.
+
+## 업로드·삭제 사용
+
+커스텀 항목의 × 버튼으로 삭제합니다. 변경은 같은 버전 비교·정책 행 잠금 규칙을 따르며 성공 응답 이후 목록과 개수를 갱신합니다.
+
+업로드 영역에서 파일 1개를 선택해 전송합니다. 서버는 마지막 점 뒤의 확장자를 비교하므로 `report.exe.txt`는 txt, `archive.tar.gz`는 gz입니다. `README`, `.env`, `file.`, 경로·제어문자가 있는 이름은 사유를 나눠 거부합니다. 파일당 10 MiB, 요청 전체 12 MiB, 이름은 UTF-8 255바이트 이내이며 0바이트는 거부합니다.
+
+성공 응답에는 파일 ID·원본 표시 이름·실제 바이트 크기·적용 정책 버전·READY 상태가 들어갑니다. 본문은 `UPLOAD_ROOT`(Compose: `/app/uploads`)에 UUID `.bin`으로 저장하며 공개 URL은 제공하지 않습니다. MIME과 확장자는 파일 안전성 보증이 아닙니다. 내용·악성코드 검사는 도입하지 않았습니다.
+
+응답을 받지 못한 업로드는 자동 재전송하지 않습니다. 강제 종료나 DB 커밋 결과 불명 시에는 DB·파일을 대조해야 하며, [장애 후 대조 절차](docs/DEC_IMPLEMENTATION.md)를 따릅니다.
