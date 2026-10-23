@@ -40,4 +40,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
             if(bytes!=null)req.setAttribute("uploadBytes",bytes);
         }
     }
+    public static String traceId() {
+        String id=MDC.get("requestId");return id==null?UUID.randomUUID().toString():id;
+    }
 }

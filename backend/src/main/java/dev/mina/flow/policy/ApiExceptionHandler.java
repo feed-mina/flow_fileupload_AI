@@ -22,7 +22,7 @@ public class ApiExceptionHandler {
     ResponseEntity<Failure> policy(PolicyException exception) {
         dev.mina.flow.operations.RequestLogFilter.result(exception.code(),null,null);
         return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new Failure(new Error(
-                exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.field())));
+                exception.code(), exception.getMessage(), dev.mina.flow.operations.RequestLogFilter.traceId(), exception.field())));
     }
 
     @ExceptionHandler({BindException.class, HttpMessageNotReadableException.class})
@@ -32,14 +32,16 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler({DataAccessException.class, TransactionException.class})
     ResponseEntity<Failure> database(Exception exception) {
-        String requestId = UUID.randomUUID().toString();
+        dev.mina.flow.operations.RequestLogFilter.result("POLICY_STORAGE_UNAVAILABLE",null,null);
+        String requestId = dev.mina.flow.operations.RequestLogFilter.traceId();
         log.error("Policy database request failed; requestId={}; errorType={}",requestId,exception.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Cache-Control", "no-store").body(new Failure(
                 new Error("POLICY_STORAGE_UNAVAILABLE", "규칙 저장소에 연결하지 못했습니다. 잠시 후 다시 조회해 주세요.", requestId, null)));
     }
 
     private ResponseEntity<Failure> failure(HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).header("Cache-Control", "no-store").body(new Failure(new Error(code, message, UUID.randomUUID().toString(), null)));
+        dev.mina.flow.operations.RequestLogFilter.result(code,null,null);
+        return ResponseEntity.status(status).header("Cache-Control", "no-store").body(new Failure(new Error(code, message, dev.mina.flow.operations.RequestLogFilter.traceId(), null)));
     }
 
     record Failure(Error error) {}
@@ -49,7 +51,7 @@ public class ApiExceptionHandler {
     ResponseEntity<UploadFailure> upload(UploadException exception) {
         dev.mina.flow.operations.RequestLogFilter.result(exception.code(),exception.policyVersion(),null);
         return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new UploadFailure(new UploadError(
-                exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.policyVersion(), exception.extension())));
+                exception.code(), exception.getMessage(), dev.mina.flow.operations.RequestLogFilter.traceId(), exception.policyVersion(), exception.extension())));
     }
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Failure> tooLarge(MaxUploadSizeExceededException exception) {
@@ -61,7 +63,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(java.io.IOException.class)
     ResponseEntity<Failure> uploadRead(Exception exception) {
-        String requestId = UUID.randomUUID().toString();
+        dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_READ_FAILED",null,null);
+        String requestId = dev.mina.flow.operations.RequestLogFilter.traceId();
         log.error("Upload request read failed; requestId={}; errorType={}",requestId,exception.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Cache-Control", "no-store").body(new Failure(
                 new Error("UPLOAD_READ_FAILED", "파일 전송을 완료하지 못했습니다. 저장 결과를 확인해 주세요.", requestId, null)));

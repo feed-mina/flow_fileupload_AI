@@ -43,6 +43,7 @@ class DatabaseOperationsTest {
         var rows=new ArrayList<Map<String,Object>>();
         for(int count:new int[]{0,50,200}){
             reset();for(int i=0;i<count;i++)admin().update("INSERT INTO extension_policy(policy_id,extension,kind,enabled) VALUES(1,?,'CUSTOM',true)","x"+i);
+            admin().execute("ANALYZE extension_policy");
             for(int i=0;i<20;i++)service.get();
             var read=new ArrayList<Double>();long start=System.nanoTime();
             for(int i=0;i<200;i++){long t=System.nanoTime();assertThat(service.get().customCount()).isEqualTo(count);read.add((System.nanoTime()-t)/1_000_000.0);}
