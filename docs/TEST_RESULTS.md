@@ -14,7 +14,7 @@
 
 위 두 실행은 수정 과정의 이력이다. **최종 커밋의 실행 URL·판정·시험 수는 [PR #2 본문](https://github.com/feed-mina/flow_fileupload_AI/pull/2)과 [Checks](https://github.com/feed-mina/flow_fileupload_AI/pull/2/checks)를 따른다.** 새 실행을 이전 실패 기록과 혼동하지 않는다.
 
-현재 시험 구성: 서버 24개(정책 8, 업로드 서비스 2, 업로드 API·파일·HTTP 경계 14), Node API 6개, Chromium 5개, 별도의 실제 두 JVM 재시작 T01~T04. HTTP 초과 응답에는 413뿐 아니라 `UPLOAD_SIZE_LIMIT` JSON 코드도 확인한다. Origin 거부 응답은 requestId와 no-store를 포함하며, DB 접근·트랜잭션 실패는 503으로 분류한다.
+현재 시험 구성: 서버 24개(정책 8, 업로드 서비스 2, 업로드 API·파일·HTTP 경계 14), Node API 6개, Chromium 기반 Chrome 5개, 별도의 실제 두 JVM 재시작 T01~T04. HTTP 초과 응답에는 413뿐 아니라 `UPLOAD_SIZE_LIMIT` JSON 코드도 확인한다. Origin 거부 응답은 requestId와 no-store를 포함하며, DB 접근·트랜잭션 실패는 503으로 분류한다. CI의 외부 폰트·시스템 패키지 설치 지연으로 runner 기본 Chrome 채널을 사용하도록 변경했다. 시험을 건너뛰거나 모킹으로 바꾸지 않았다.
 
 실행 위치·명령: 저장소 루트 `mvn -B -ntp -f backend/pom.xml verify`, `node scripts/verify-restart.mjs`; frontend에서 `npm test`, `npm run build`, `npm run test:e2e`. DB·경로는 격리된 CI/Testcontainers 환경이며 실제 사용자 파일은 사용하지 않는다. 아티팩트 `policy-test-evidence`의 JUnit·재시작 JSON/로그·브라우저 보고서를 함께 확인한다.
 

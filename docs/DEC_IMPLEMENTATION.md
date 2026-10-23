@@ -77,3 +77,5 @@ DB와 디스크는 분산 트랜잭션이 아니다. `TransactionTemplate.execut
 실행된 검사·수정 이력은 TEST_RESULTS를, 최종 커밋의 실행 URL과 판정은 PR #2 본문·Checks를 따른다. 실제 Docker 빌드·기동, 공개 사이트 시험, 강제 종료 복구·자동 보관 정책은 별도로 구분한다.
 
 크기 초과 응답의 연결 끊김은 Tomcat의 유한한 `max-swallow-size: 12MB` 설정으로 보완했다. 무제한 소비는 허용하지 않는다. 참고: [Tomcat HTTP Connector](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html), [Spring Boot 3.5 속성](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html). Vite Host 변경은 [공식 프록시 소스](https://github.com/vitejs/vite/blob/v8.3.5/packages/vite/src/node/server/middlewares/proxy.ts)의 문자열 축약 동작을 확인해 수정했다.
+
+CI는 ubuntu-24.04에 기본 제공되는 Chrome을 버전 출력 후 `PLAYWRIGHT_CHANNEL=chrome`으로 실행한다. 외부 시스템·폰트 패키지 다운로드 지연을 줄이되 시험 5개는 그대로 유지한다. 로컬 기본값은 Playwright Chromium이다. 근거: [공식 runner 이미지 목록](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md), [Playwright Chrome 채널 지원](https://playwright.dev/docs/browsers).

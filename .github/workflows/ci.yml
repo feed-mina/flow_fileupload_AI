@@ -49,10 +49,8 @@ jobs:
         run: |
           npm test
           npm run build
-      - name: Install browser and system dependencies
-        working-directory: frontend
-        timeout-minutes: 10
-        run: npx playwright install --with-deps chromium
+      - name: Verify runner-provided Chrome
+        run: google-chrome --version
       - name: T01-T04 real process restart test
         run: node scripts/verify-restart.mjs
       - name: Create isolated browser database
@@ -61,6 +59,7 @@ jobs:
         working-directory: frontend
         env:
           DB_URL: jdbc:postgresql://127.0.0.1:5432/flow_browser
+          PLAYWRIGHT_CHANNEL: chrome
         run: npm run test:e2e
       - name: Validate Docker configuration
         env:
