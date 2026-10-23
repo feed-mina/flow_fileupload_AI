@@ -1,5 +1,8 @@
 # Hostinger 서버·PostgreSQL / Vercel 프론트 배포 준비 보고서
 
+> 이 문서는 배포 전 준비 기록입니다. 이후 실제 Hostinger·Vercel 배포를 진행했습니다. 현재 적용한 구성, 확인 결과 및 미완료 항목은 [2026-10-23 실제 배포 진행 기록](DEPLOYMENT_PROGRESS_2026-10-23.md)을 먼저 확인하세요. 실제 배포는 기존 Traefik과 Vercel 외부 rewrite를 사용했으며, 아래 Caddy·직접 API 주소 구성은 당시 계획입니다.
+
+
 작성일: 2026-10-23. **구성·코드·시험 준비이며 실제 호스팅 구매·DNS 변경·공개 배포는 하지 않았다.** VPS(Virtual Private Server, 가상 전용 서버)·도메인·비밀값은 사용자가 사용할 환경에서 설정한다.
 
 ## 전체 연결
