@@ -81,3 +81,8 @@ npx playwright install --with-deps chromium
 ## UX·예외 처리 후속 구현
 
 [채택 항목·응답 유실 조회 계약·시험 범위](docs/UX_IMPLEMENTATION.md)를 확인하세요. 미확인 업로드는 화면의 저장 결과 확인 버튼 또는 GET /api/uploads/status/{requestId}로 조회합니다. 404는 아직 처리 중일 수 있으며 자동 재전송하지 않습니다. 정책 변경·버전 증가·감사 이력은 함께 커밋됩니다. FE-U07은 이번 추가 구현 범위에서 제외했습니다.
+
+
+## 구현 결과 보고서
+
+[PR1·PR2·PR3 구현 결과와 UI 리서치·가이드 전체 목록](docs/reports/README.md)을 확인하세요. HTML은 오른쪽 노드와 왼쪽 소스를 연결하며, Markdown은 GitHub 소스 줄 링크를 제공합니다.
