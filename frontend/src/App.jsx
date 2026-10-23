@@ -40,7 +40,7 @@ export default function App() {
               <p className="help">목록에 없는 확장자를 직접 추가하세요.</p>
               <form onSubmit={submit}>
                 <label className="input-label" htmlFor="extension">추가할 확장자</label>
-                <div className="input-row"><Input id="extension" value={extension} maxLength={policy.maxLength} placeholder="예: sh" autoComplete="off" disabled={disabled} onChange={(event) => setExtension(event.target.value)} /><Button htmlType="submit" type="primary" disabled={disabled || !extension.trim() || policy.customCount >= policy.maxCount} loading={pending === 'custom'}>추가</Button></div>
+                <div className="input-row"><Input id="extension" value={extension} maxLength={policy.maxLength + 1} placeholder="예: sh" autoComplete="off" disabled={disabled} onChange={(event) => setExtension(event.target.value)} /><Button htmlType="submit" type="primary" disabled={disabled || !extension.trim() || policy.customCount >= policy.maxCount} loading={pending === 'custom'}>추가</Button></div>
               </form>
               <p className="footnote">영문·숫자 최대 {policy.maxLength}자 · 최대 {policy.maxCount}개<br />앞의 점과 대소문자는 저장할 때 정리합니다.</p>
               <div className="custom-list" role="list" aria-label="커스텀 확장자 목록">

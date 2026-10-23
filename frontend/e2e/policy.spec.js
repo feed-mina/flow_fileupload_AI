@@ -52,10 +52,11 @@ test('커스텀 추가 실패 시 사용자가 쓴 입력을 보존한다', asyn
   await page.route('**/api/policy', (route) => route.fulfill({ json: initial }));
   await page.route('**/api/policy/custom', (route) => route.fulfill({ status: 409, json: { error: { code: 'DUPLICATE_EXTENSION', message: '이미 추가한 확장자입니다.' } } }));
   await page.goto('/');
-  await page.getByLabel('추가할 확장자').fill('sh');
+  const raw = '.' + 'a'.repeat(20);
+  await page.getByLabel('추가할 확장자').fill(raw);
   await page.getByRole('button', { name: '추가', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('이미 추가한 확장자입니다.');
-  await expect(page.getByLabel('추가할 확장자')).toHaveValue('sh');
+  await expect(page.getByLabel('추가할 확장자')).toHaveValue(raw);
   await expect(page.getByLabel('커스텀 확장자 개수')).toHaveText('0/200');
 });
 
