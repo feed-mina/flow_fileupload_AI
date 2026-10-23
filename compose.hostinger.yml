@@ -1,0 +1,67 @@
+# Deployment template. Set real DNS/secrets before use; not deployed by this task.
+services:
+  db:
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flow_policy}
+      POSTGRES_USER: ${POSTGRES_USER:-flow_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set administrator password}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set distinct application password}
+    volumes:
+      - policy_data:/var/lib/postgresql/data
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
+    environment:
+      MIGRATE_ONLY: 'true'
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
+      DB_USER: ${POSTGRES_USER:-flow_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set administrator password}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+  backend:
+    build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
+      DB_USER: flow_app
+      DB_PASSWORD: ${APP_DB_PASSWORD:?Set application password}
+      SPRING_FLYWAY_ENABLED: 'false'
+      UPLOAD_ROOT: /app/uploads
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:?Set exact HTTPS frontend origin}
+      SESSION_COOKIE_SECURE: 'true'
+      SESSION_COOKIE_SAME_SITE: ${SESSION_COOKIE_SAME_SITE:-lax}
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      DEMO_AUTH_USER: ${DEMO_AUTH_USER:-}
+      DEMO_AUTH_PASSWORD: ${DEMO_AUTH_PASSWORD:-}
+    volumes:
+      - upload_data:/app/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+  gateway:
+    image: caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
+    environment:
+      API_HOST: ${API_HOST:?Set actual API domain}
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [backend]
+    restart: unless-stopped
+volumes:
+  policy_data:
+  upload_data:
+  caddy_data:
+  caddy_config:

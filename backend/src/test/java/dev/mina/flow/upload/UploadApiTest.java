@@ -54,13 +54,16 @@ class UploadApiTest {
         jdbc.execute("DROP TRIGGER IF EXISTS fail_ready ON upload_record");
         try (var paths = Files.list(root)) { for (Path file : paths.toList()) Files.delete(file); }
     }
+    private org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder secureMultipart() {
+        var builder=multipart("/api/uploads");builder.with(csrf());return builder;
+    }
     private MockPart file(String name, byte[] bytes) { return new MockPart("file", name, bytes); }
     private void emptyStorage() throws IOException {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM upload_record", Integer.class)).isZero();
         try (var paths = Files.list(root)) { assertThat(paths.count()).isZero(); }
     }
     @Test void normalUploadStoresUuidBytesAndMetadata() throws Exception {
-        String response = mvc.perform(multipart("/api/uploads").with(csrf()).part(file("hello.txt", new byte[]{1,2,3})))
+        String response = mvc.perform(secureMultipart().part(file("hello.txt", new byte[]{1,2,3})))
                 .andExpect(status().isCreated()).andExpect(jsonPath("state").value("READY"))
                 .andExpect(jsonPath("originalName").value("hello.txt")).andExpect(jsonPath("policyVersion").value(0))
                 .andReturn().getResponse().getContentAsString();
@@ -73,12 +76,12 @@ class UploadApiTest {
         String requestId = java.util.UUID.randomUUID().toString();
         mvc.perform(get("/api/uploads/status/"+requestId)).andExpect(status().isNotFound())
                 .andExpect(jsonPath("error.code").value("UPLOAD_NOT_CONFIRMED"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
                 .andExpect(status().isCreated()).andExpect(jsonPath("requestId").value(requestId));
         for (int i=0;i<2;i++) mvc.perform(get("/api/uploads/status/"+requestId))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control","no-store"))
                 .andExpect(jsonPath("requestId").value(requestId)).andExpect(jsonPath("state").value("READY"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{3})).header("X-Upload-Request-Id",requestId))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{3})).header("X-Upload-Request-Id",requestId))
                 .andExpect(status().isConflict()).andExpect(jsonPath("error.code").value("UPLOAD_REQUEST_EXISTS"));
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM upload_record",Integer.class)).isEqualTo(1);
         try (var paths=Files.list(root)) { assertThat(paths.count()).isEqualTo(1); }
@@ -86,10 +89,10 @@ class UploadApiTest {
     @Test void invalidLookupIdAndInternalStorageErrorsAreSanitized() throws Exception {
         mvc.perform(get("/api/uploads/status/not-a-uuid")).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("error.code").value("INVALID_UPLOAD_REQUEST_ID"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1})).header("X-Upload-Request-Id","1-1-1-1-1"))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})).header("X-Upload-Request-Id","1-1-1-1-1"))
                 .andExpect(status().isBadRequest());
         doThrow(new IOException("AccessDenied /private/uploads secret-stack")).when(storage).copy(any(),any());
-        String result=mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1})))
+        String result=mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})))
                 .andExpect(status().isInternalServerError()).andExpect(jsonPath("error.requestId").isNotEmpty())
                 .andReturn().getResponse().getContentAsString();
         assertThat(result).doesNotContain("AccessDenied","/private/uploads","secret-stack");
@@ -104,7 +107,7 @@ class UploadApiTest {
             return result;
         }).when(storage).copy(any(),any());
         java.util.function.Supplier<Integer> send=()->{
-            try { return mvc.perform(multipart("/api/uploads").with(csrf()).part(file("race.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
+            try { return mvc.perform(secureMultipart().part(file("race.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
                     .andReturn().getResponse().getStatus(); }
             catch(Exception error) { throw new RuntimeException(error); }
         };
@@ -118,42 +121,42 @@ class UploadApiTest {
     @Test void selectedExeBlocksDirectApiAndUnselectedExeIsAllowed() throws Exception {
         jdbc.update("UPDATE extension_policy SET enabled = TRUE WHERE extension = 'exe'");
         jdbc.update("UPDATE policy_scope SET version = 1");
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("sample.EXE", new byte[]{77,90})))
+        mvc.perform(secureMultipart().part(file("sample.EXE", new byte[]{77,90})))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("error.code").value("EXTENSION_BLOCKED"))
                 .andExpect(jsonPath("error.extension").value("exe")).andExpect(jsonPath("error.policyVersion").value(1));
         emptyStorage();
         jdbc.update("UPDATE extension_policy SET enabled = FALSE WHERE extension = 'exe'");
         MockPart spoof = file("sample.EXE", new byte[]{77,90});
         spoof.getHeaders().setContentType(MediaType.IMAGE_JPEG);
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(spoof)).andExpect(status().isCreated());
+        mvc.perform(secureMultipart().part(spoof)).andExpect(status().isCreated());
         // MIME is untrusted metadata; no hidden always-block-exe/content-scanner rule.
     }
     @ParameterizedTest
     @CsvSource({"README,FILE_EXTENSION_REQUIRED", ".env,HIDDEN_FILE_NAME", "file.,FILE_NAME_TRAILING_DOT", "../a.txt,INVALID_FILE_NAME", "C:\\a.txt,INVALID_FILE_NAME"})
     void invalidFilenameHasDistinctReason(String name, String code) throws Exception {
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file(name,new byte[]{1})))
+        mvc.perform(secureMultipart().part(file(name,new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value(code));
         emptyStorage();
     }
     @Test void lastSuffixAndUtf8ByteBoundaries() throws Exception {
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.K",new byte[]{1})))
+        mvc.perform(secureMultipart().part(file("a.K",new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("INVALID_FILE_EXTENSION"));
         jdbc.update("UPDATE extension_policy SET enabled = TRUE WHERE extension = 'exe'");
         for (String name : new String[]{"report.exe.txt", "archive.tar.gz", "<img onerror=alert(1)>.txt", "a".repeat(251)+".txt", "가".repeat(83)+".txt"})
-            mvc.perform(multipart("/api/uploads").with(csrf()).part(file(name,new byte[]{1}))).andExpect(status().isCreated());
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("가".repeat(84)+".txt",new byte[]{1})))
+            mvc.perform(secureMultipart().part(file(name,new byte[]{1}))).andExpect(status().isCreated());
+        mvc.perform(secureMultipart().part(file("가".repeat(84)+".txt",new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("FILE_NAME_TOO_LONG"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a\u0001.txt",new byte[]{1})))
+        mvc.perform(secureMultipart().part(file("a\u0001.txt",new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("INVALID_FILE_NAME"));
     }
     @Test void missingEmptyWrongFieldAndMultipleFilesAreDifferent() throws Exception {
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(new MockPart("note",new byte[]{1})))
+        mvc.perform(secureMultipart().part(new MockPart("note",new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("FILE_REQUIRED"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("empty.txt",new byte[0])))
+        mvc.perform(secureMultipart().part(file("empty.txt",new byte[0])))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("FILE_EMPTY"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(new MockPart("other","a.txt",new byte[]{1})))
+        mvc.perform(secureMultipart().part(new MockPart("other","a.txt",new byte[]{1})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("FILE_FIELD_REQUIRED"));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1}),new MockPart("other","b.txt",new byte[]{2})))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1}),new MockPart("other","b.txt",new byte[]{2})))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("FILE_COUNT_INVALID"));
         emptyStorage();
     }
@@ -174,14 +177,14 @@ class UploadApiTest {
     }
     @Test void moveFailureRollsBackAndCleansStaging() throws Exception {
         doThrow(new IOException("injected move failure")).when(storage).publish(any(),any());
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1})))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})))
                 .andExpect(status().isInternalServerError()).andExpect(jsonPath("error.code").value("FILE_STORAGE_FAILED"));
         emptyStorage();
     }
     @Test void databaseReadyFailureRollsBackAndRemovesPublishedFile() throws Exception {
         jdbc.execute("CREATE OR REPLACE FUNCTION reject_ready() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected ready failure'; END $$");
         jdbc.execute("CREATE TRIGGER fail_ready BEFORE UPDATE ON upload_record FOR EACH ROW EXECUTE FUNCTION reject_ready()");
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1}))).andExpect(status().isServiceUnavailable());
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1}))).andExpect(status().isServiceUnavailable());
         emptyStorage();
     }
     @Test void aCommittedSnapshotIsUsedEvenWhenPolicyChangesDuringCopy() throws Exception {
@@ -190,13 +193,13 @@ class UploadApiTest {
             jdbc.update("UPDATE policy_scope SET version = 1");
             return invocation.callRealMethod();
         }).when(storage).copy(any(),any());
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1})))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})))
                 .andExpect(status().isCreated()).andExpect(jsonPath("policyVersion").value(0));
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("b.txt",new byte[]{1})))
+        mvc.perform(secureMultipart().part(file("b.txt",new byte[]{1})))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("error.policyVersion").value(1));
     }
     @Test void crossOriginBrowserWriteIsRejected() throws Exception {
-        mvc.perform(multipart("/api/uploads").with(csrf()).part(file("a.txt",new byte[]{1})).header("Origin","https://untrusted.invalid"))
+        mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})).header("Origin","https://untrusted.invalid"))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("ORIGIN_NOT_ALLOWED"))
                 .andExpect(jsonPath("error.requestId").isNotEmpty());
         emptyStorage();

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Testcontainers
 class DatabaseOperationsTest {
-    @Container static final PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:17.6-alpine").withInitScript("least-privilege-test.sql");
+    @Container static final PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94").withInitScript("least-privilege-test.sql");
     @DynamicPropertySource static void database(DynamicPropertyRegistry p){
         p.add("spring.datasource.url",postgres::getJdbcUrl);p.add("spring.datasource.username",()->"flow_app");p.add("spring.datasource.password",()->"disposable-app-only");
         p.add("spring.flyway.url",postgres::getJdbcUrl);p.add("spring.flyway.user",postgres::getUsername);p.add("spring.flyway.password",postgres::getPassword);

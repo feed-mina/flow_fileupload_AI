@@ -14,14 +14,26 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+  migrate:
+    build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
+    environment:
+      MIGRATE_ONLY: 'true'
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
+      DB_USER: ${POSTGRES_USER:-flow_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
   backend:
     build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
     environment:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
       DB_USER: flow_app
       DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
-      SPRING_FLYWAY_USER: ${POSTGRES_USER:-flow_admin}
-      SPRING_FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      SPRING_FLYWAY_ENABLED: 'false'
       APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-}
       SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
       SESSION_COOKIE_SAME_SITE: ${SESSION_COOKIE_SAME_SITE:-lax}
@@ -31,8 +43,8 @@ services:
     volumes:
       - upload_data:/app/uploads
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
   frontend:
     build: ./frontend
     ports:

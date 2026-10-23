@@ -52,7 +52,10 @@ jobs:
       - name: Verify runner-provided Chrome
         run: google-chrome --version
       - name: T01-T04 real process restart test
-        run: node scripts/verify-restart.mjs
+        run: |
+          psql -h 127.0.0.1 -U flow -d flow_smoke -c "CREATE ROLE flow_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD 'ci-disposable-app-password';"
+          MIGRATE_ONLY=true java -jar backend/target/flow-policy.jar
+          DB_USER=flow_app DB_PASSWORD=ci-disposable-app-password SPRING_FLYWAY_ENABLED=false node scripts/verify-restart.mjs
       - name: Create isolated browser database
         run: psql -h 127.0.0.1 -U flow -d flow_smoke -c 'CREATE DATABASE flow_browser;'
       - name: Browser tests
