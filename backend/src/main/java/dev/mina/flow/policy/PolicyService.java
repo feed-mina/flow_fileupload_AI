@@ -60,9 +60,9 @@ public class PolicyService {
         if (input == null) throw invalidExtension();
         String normalized = input.strip();
         if (normalized.startsWith(".")) normalized = normalized.substring(1);
-        normalized = normalized.toLowerCase(Locale.ROOT);
-        if (!normalized.matches("[a-z0-9]{1,20}")) throw invalidExtension();
-        return normalized;
+        // Validate the raw alphabet before Unicode case folding (Kelvin sign -> k).
+        if (!normalized.matches("[A-Za-z0-9]{1,20}")) throw invalidExtension();
+        return normalized.toLowerCase(Locale.ROOT);
     }
 
     private PolicyException invalidExtension() {

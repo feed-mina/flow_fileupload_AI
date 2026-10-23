@@ -101,6 +101,9 @@ class PolicyApiTest {
     @Test
     @DisplayName("길이 초과와 enabled 누락은 저장하지 않고 400")
     void rejectsInvalidRequests() {
+        for (String invalid : List.of("K", "ｓｈ", "tar.gz", "s h", "..sh")) {
+            assertThat(exchange("/custom", HttpMethod.POST, Map.of("extension", invalid), "\"0\"").getStatusCode().value()).isEqualTo(400);
+        }
         assertThat(exchange("/custom", HttpMethod.POST, Map.of("extension", "a".repeat(21)), "\"0\"").getStatusCode().value()).isEqualTo(400);
         assertThat(exchange("/fixed/exe", HttpMethod.PUT, Map.of(), "\"0\"").getStatusCode().value()).isEqualTo(400);
         assertThat(get().getBody().get("version").asLong()).isZero();

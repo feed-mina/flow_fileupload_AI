@@ -88,6 +88,8 @@ class UploadApiTest {
         emptyStorage();
     }
     @Test void lastSuffixAndUtf8ByteBoundaries() throws Exception {
+        mvc.perform(multipart("/api/uploads").part(file("a.K",new byte[]{1})))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("error.code").value("INVALID_FILE_EXTENSION"));
         jdbc.update("UPDATE extension_policy SET enabled = TRUE WHERE extension = 'exe'");
         for (String name : new String[]{"report.exe.txt", "archive.tar.gz", "<img onerror=alert(1)>.txt", "a".repeat(251)+".txt", "가".repeat(83)+".txt"})
             mvc.perform(multipart("/api/uploads").part(file(name,new byte[]{1}))).andExpect(status().isCreated());

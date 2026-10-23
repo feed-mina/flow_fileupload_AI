@@ -16,10 +16,10 @@ public final class FilenameRules {
         if (dot < 0) throw error("FILE_EXTENSION_REQUIRED", "확장자가 없는 파일은 보낼 수 없습니다.", version);
         if (dot == name.length() - 1) throw error("FILE_NAME_TRAILING_DOT", "이름이 점으로 끝나는 파일은 보낼 수 없습니다.", version);
         if (dot == 0) throw error("HIDDEN_FILE_NAME", "확장자를 구분할 수 없는 단독 숨김 이름은 보낼 수 없습니다.", version);
-        String extension = name.substring(dot + 1).toLowerCase(Locale.ROOT);
-        if (!extension.matches("[a-z0-9]{1,20}"))
+        String extension = name.substring(dot + 1);
+        if (!extension.matches("[A-Za-z0-9]{1,20}"))
             throw error("INVALID_FILE_EXTENSION", "마지막 확장자는 영문·숫자 1~20자여야 합니다.", version);
-        return extension;
+        return extension.toLowerCase(Locale.ROOT);
     }
     private static UploadException error(String code, String message, long version) {
         return new UploadException(HttpStatus.BAD_REQUEST, code, message, version, null);
