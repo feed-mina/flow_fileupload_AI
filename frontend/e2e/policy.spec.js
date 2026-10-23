@@ -7,11 +7,16 @@ const initial = {
 };
 
 test.beforeEach(async ({ page }) => {
+  page.on('pageerror',error=>console.log('Browser page error: '+error.message));
   page.on('response', async (response) => {
     if (response.url().includes('/api/') && response.status() >= 400) {
       console.log(`API failure ${response.status()} ${new URL(response.url()).pathname}: ${await response.text().catch(() => 'unreadable')}`);
     }
   });
+});
+
+test.afterEach(async ({page},info)=>{
+  if(info.status!==info.expectedStatus)console.log('Failed UX screen: '+await page.locator('body').ariaSnapshot());
 });
 
 test('T01 → T02 → T04: 실제 서버와 DB로 초기 상태·선택 저장·커스텀 추가 확인', async ({ page }) => {
@@ -129,7 +134,8 @@ test('업로드 결과 조회의 404와 장애를 실패 확정이나 자동 POS
   await page.goto('/');await page.getByRole('button',{name:'저장 결과 확인',exact:true}).click();
   await expect(page.getByRole('alert')).toContainText('처리 중이거나');
   await expect(page.getByRole('button',{name:'파일 업로드',exact:true})).toBeDisabled();
-  status=503;await page.getByRole('button',{name:'저장 결과 확인',exact:true}).click();
+  console.log('UX state after unconfirmed lookup: '+await page.locator('body').ariaSnapshot());
+  status=503;const lookup=page.getByRole('button').filter({hasText:'저장 결과 확인'});await expect(lookup).toBeEnabled();await lookup.click();
   await expect(page.getByRole('alert')).toContainText('저장 결과를 조회하지 못했습니다.');expect(posts).toBe(0);
 });
 
@@ -157,13 +163,14 @@ test('DEC 업로드: 선택된 EXE 차단 → 해제 후 저장 → 커스텀 �
   await expect(exe).toBeChecked();
   await expect(exe).toBeEnabled();
   await page.getByLabel('업로드할 파일').setInputFiles({ name:'sample.EXE', mimeType:'image/jpeg', buffer:Buffer.from('MZ test fixture') });
-  await page.getByRole('button',{name:'파일 업로드',exact:true}).click();
+  await page.getByRole('button').filter({hasText:'파일 업로드'}).click();
   await expect(page.getByRole('alert')).toContainText('차단한 확장자');
   await expect(page.getByText('업로드 완료',{exact:true})).toHaveCount(0);
   await exe.click();
   await expect(exe).not.toBeChecked();
   await expect(exe).toBeEnabled();
-  await page.getByRole('button',{name:'파일 업로드',exact:true}).click();
+  console.log('UX state before upload retry by user: '+await page.locator('body').ariaSnapshot());
+  const upload=page.getByRole('button').filter({hasText:'파일 업로드'});await expect(upload).toBeEnabled();await upload.click();
   await expect(page.getByText('업로드 완료',{exact:true})).toBeVisible();
   await expect(page.getByText(/파일 ID:/)).toBeVisible();
   await page.getByRole('button',{name:'sh 삭제',exact:true}).click();
