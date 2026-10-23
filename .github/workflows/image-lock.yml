@@ -1,0 +1,21 @@
+name: Resolve immutable container images
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/hostinger-hardening]
+    paths: [.github/workflows/image-lock.yml]
+permissions:
+  contents: read
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve registry manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in maven:3.9.9-eclipse-temurin-17 eclipse-temurin:17-jre-jammy node:22.13.0-alpine nginx:1.28-alpine postgres:17.6-alpine caddy:2-alpine; do
+            digest=$(docker buildx imagetools inspect "$image" --format '{{.Manifest.Digest}}')
+            test "${digest:0:7}" = sha256:
+            printf 'IMAGE_LOCK %s@%s\n' "$image" "$digest"
+          done
