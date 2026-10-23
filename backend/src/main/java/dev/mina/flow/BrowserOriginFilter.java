@@ -24,7 +24,8 @@ public class BrowserOriginFilter extends OncePerRequestFilter {
                 response.setStatus(403);
                 response.setContentType("application/json;charset=UTF-8");
                 response.setHeader("Cache-Control", "no-store");
-                response.getWriter().write("{\"error\":{\"code\":\"ORIGIN_NOT_ALLOWED\",\"message\":\"같은 출처의 화면에서 요청해 주세요.\",\"requestId\":\"" + UUID.randomUUID() + "\"}}");
+                dev.mina.flow.operations.RequestLogFilter.result("ORIGIN_NOT_ALLOWED",null,null);
+                response.getWriter().write("{\"error\":{\"code\":\"ORIGIN_NOT_ALLOWED\",\"message\":\"같은 출처의 화면에서 요청해 주세요.\",\"requestId\":\"" + dev.mina.flow.operations.RequestLogFilter.traceId() + "\"}}");
                 return;
             }
         }

@@ -38,3 +38,13 @@
 - 도구: 소스/문서 분석, PostgreSQL 모범 사례, GitHub API·Actions. FE-U07의 신규 기능/완료 판정 제외, 기존 접근성은 제거하지 않음.
 
 - 첫 CI 실제 결과: https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902350802, 커밋 f605e640965336730ef6c744577a5610622f55c0. 서버 30·Node 10·브라우저 11·재시작·Nginx 413·빌드/구성 모두 통과. 최종 커밋 판정은 PR #3 본문/Checks에 기록.
+
+
+## Hostinger·Vercel 준비 사용자 결정 — 2026-10-23 / PR #5
+
+- 요청: DEC-01의 사용자 ID/IP 정책 분리 가능성 설명, DEC-12 불변 이미지, 최소 권한 DB 계정/GRANT, 실제 DB 부하/지연 측정, 쿠키 인증/CSRF, 임시 파일 자동 만료 청소, 구조화 로그·요청 제한/UI, 화면 자동 재조회·사전 안내·입력 초기화·모바일 200개 시험 후 IMPLEMENTATION_GUIDE_ANNOTATED.md 갱신.
+- 제외/보류: DEC-13 정상 파일 보관/전체 총량, BE-S11 편집 권한/격리, BE-O07 신규 readiness/자동 복구는 구현하지 않음. DB-O05는 매일02시·일요일03시 안내만 작성하고 cron 설치/삭제를 실행하지 않음. DB/파일 백업은 호스팅 선정 뒤 구현할 수 있도록 절차를 작성.
+- 판단: IP는 공유·변경되어 정책 소유권으로 부적합. 사용자 ID도 서버의 소유권/범위별 접근이 필요함. 쿠키 로그인과 정책 편집 인가는 구분. 모든 임의 확장자의 내용을 증명할 수 없으므로 인식 샘플/등록 확장자 진단과 UNVERIFIABLE을 구분하고 운영 차단 규칙을 추가하지 않음.
+- 도구/근거: PostgreSQL 모범 사례 스킬, Hostinger·Vercel·Spring Security/Boot·Tika 공식 문서, GitHub API/Actions. 실제 Docker 레지스트리에서 6개 기본 이미지 digest 확인 후 고정. 로컬 Node API10개 통과, 나머지 실제 DB/브라우저/프록시 시험은 CI의 TEST_RESULTS 근거를 따름.
+- 수정: 관리 자격은 앱 컨테이너가 아닌 별도 migrator에만 전달. 실제 테이블 통계를 갱신한 후 지연·실행 계획 측정. multipart CSRF builder 타입/Testcontainers digest 표기 실패를 수정하고 검사 유지. 응답과 구조화 로그의 추적 번호를 통일.
+- 실제 공개 배포·도메인 변경·호스팅 결제·정상 파일 보관/총량 자동화·운영 cron 설치·실서버 백업은 실행하지 않음. 최종 사용자의 회고/제출 검토는 별도이며 AI의 자체 판단으로 대신하지 않음.

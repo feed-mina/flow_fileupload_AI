@@ -86,3 +86,14 @@ npx playwright install --with-deps chromium
 ## 구현 결과 보고서
 
 [PR1·PR2·PR3 구현 결과와 UI 리서치·가이드 전체 목록](docs/reports/README.md)을 확인하세요. HTML은 오른쪽 노드와 왼쪽 소스를 연결하며, Markdown은 GitHub 소스 줄 링크를 제공합니다.
+
+
+## Hostinger·Vercel 배포 준비
+
+현재 구현·보류 항목은 [주석판 구현 가이드](docs/IMPLEMENTATION_GUIDE_ANNOTATED.md) 23절을 따릅니다. [Hostinger VPS 서버·PostgreSQL / Vercel 프론트 배포 준비](docs/HOSTINGER_VERCEL_DEPLOYMENT.md), [감사·로그 매일 02시/일요일 03시 예약 안내](docs/OPERATIONS_SCHEDULE_GUIDE.md)를 함께 확인하세요.
+
+로컬 새 DB의 관리자 계정은 flow_admin, 앱 계정은 flow_app입니다. `.env`에 서로 다른 `POSTGRES_PASSWORD`와 `APP_DB_PASSWORD`를 지정합니다. 관리자 마이그레이션은 일회성 migrate 서비스에서 실행하고, backend에는 앱 자격만 전달합니다. 기존 볼륨은 초기화 스크립트가 재실행되지 않으므로 배포 준비 문서의 기존 DB 절차를 먼저 따릅니다.
+
+쿠키 로그인은 `DEMO_AUTH_USER`/12자 이상 `DEMO_AUTH_PASSWORD`를 직접 설정한 경우에만 사용합니다. 기본 로그인 계정은 없습니다. 로그인 여부와 별개로 현재 정책 API의 사용자별 격리/편집 권한은 적용하지 않았습니다. 변경 API는 먼저 GET /api/session으로 쿠키·CSRF 토큰을 받고 X-CSRF-TOKEN을 보내야 합니다. 직접 API 도구와 새로 시작한 세션도 같습니다.
+
+기본 요청 제한은 연결 주소당 변경 요청 120회/분, 동시 업로드4개입니다. 정상 저장 파일의 전체 총량/보관 정책은 미구현입니다. 만료 임시 파일만 별도로 청소합니다. 실제 공개 배포·cron 설치·백업/복원 자동화는 이 변경에서 실행하지 않았습니다.
