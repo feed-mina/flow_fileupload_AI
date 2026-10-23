@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 class PolicyApiTest {
     @Container
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.6-alpine");
+    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94");
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
@@ -190,6 +190,9 @@ class PolicyApiTest {
     private ResponseEntity<JsonNode> exchange(String suffix, HttpMethod method, Object body, String version) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        var security = rest.getForEntity("/api/session",JsonNode.class);
+        headers.set("Cookie",security.getHeaders().getFirst("Set-Cookie").split(";",2)[0]);
+        headers.set("X-CSRF-TOKEN",security.getBody().get("csrfToken").asText());
         if (version != null) headers.set(HttpHeaders.IF_MATCH, version);
         return rest.exchange("/api/policy" + suffix, method, new HttpEntity<>(body, headers), JsonNode.class);
     }

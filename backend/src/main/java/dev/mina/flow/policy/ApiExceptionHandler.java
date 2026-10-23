@@ -20,6 +20,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(PolicyException.class)
     ResponseEntity<Failure> policy(PolicyException exception) {
+        dev.mina.flow.operations.RequestLogFilter.result(exception.code(),null,null);
         return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new Failure(new Error(
                 exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.field())));
     }
@@ -32,7 +33,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler({DataAccessException.class, TransactionException.class})
     ResponseEntity<Failure> database(Exception exception) {
         String requestId = UUID.randomUUID().toString();
-        log.error("Policy database request failed; requestId={}", requestId, exception);
+        log.error("Policy database request failed; requestId={}; errorType={}",requestId,exception.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Cache-Control", "no-store").body(new Failure(
                 new Error("POLICY_STORAGE_UNAVAILABLE", "규칙 저장소에 연결하지 못했습니다. 잠시 후 다시 조회해 주세요.", requestId, null)));
     }
@@ -46,11 +47,13 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(UploadException.class)
     ResponseEntity<UploadFailure> upload(UploadException exception) {
+        dev.mina.flow.operations.RequestLogFilter.result(exception.code(),exception.policyVersion(),null);
         return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new UploadFailure(new UploadError(
                 exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.policyVersion(), exception.extension())));
     }
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Failure> tooLarge(MaxUploadSizeExceededException exception) {
+        dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_SIZE_LIMIT",null,null);
         return failure(HttpStatus.PAYLOAD_TOO_LARGE, "UPLOAD_SIZE_LIMIT", "파일은 10 MiB, 전체 요청은 12 MiB 이하여야 합니다.");
     }
     record UploadFailure(UploadError error) {}
@@ -59,7 +62,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(java.io.IOException.class)
     ResponseEntity<Failure> uploadRead(Exception exception) {
         String requestId = UUID.randomUUID().toString();
-        log.error("Upload request read failed; requestId={}", requestId, exception);
+        log.error("Upload request read failed; requestId={}; errorType={}",requestId,exception.getClass().getSimpleName());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Cache-Control", "no-store").body(new Failure(
                 new Error("UPLOAD_READ_FAILED", "파일 전송을 완료하지 못했습니다. 저장 결과를 확인해 주세요.", requestId, null)));
     }

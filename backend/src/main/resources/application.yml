@@ -18,8 +18,18 @@ spring:
       max-request-size: 12MB
       file-size-threshold: 0B
 app:
+  allowed-origins: ${APP_ALLOWED_ORIGINS:}
+  demo-user: ${DEMO_AUTH_USER:}
+  demo-password: ${DEMO_AUTH_PASSWORD:}
   upload-root: ${UPLOAD_ROOT:./uploads}
 server:
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:false}
+        same-site: ${SESSION_COOKIE_SAME_SITE:lax}
   tomcat:
     # Consume a rejected body within the finite request envelope so a client
     # can receive the JSON 413 rather than a broken pipe from the default 2 MiB.
@@ -36,3 +46,8 @@ management:
   endpoint:
     health:
       show-details: never
+
+logging:
+  structured:
+    format:
+      console: logstash

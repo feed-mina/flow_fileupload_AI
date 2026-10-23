@@ -1,0 +1,12 @@
+{
+  "resolved_at": "2026-10-23",
+  "evidence": "https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39911567865",
+  "images": {
+    "maven:3.9.9-eclipse-temurin-17": "sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc",
+    "eclipse-temurin:17-jre-jammy": "sha256:b3054a20e1a851574cdb1692dd0db5310c647e62214a2a7abecbec1b9e3ae8f1",
+    "node:22.13.0-alpine": "sha256:f2dc6eea95f787e25f173ba9904c9d0647ab2506178c7b5b7c5a3d02bc4af145",
+    "nginx:1.28-alpine": "sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236",
+    "postgres:17.6-alpine": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+    "caddy:2-alpine": "sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f"
+  }
+}

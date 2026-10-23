@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 const initial = {
   version: 0,
@@ -17,6 +18,47 @@ test.beforeEach(async ({ page }) => {
 
 test.afterEach(async ({page},info)=>{
   if(info.status!==info.expectedStatus)console.log('Failed UX screen: '+await page.locator('body').ariaSnapshot());
+});
+
+test('60초 경과 자동 재조회는 입력 초안을 보존한다',async({page})=>{
+  await page.clock.install();let reads=0;
+  await page.route('**/api/policy',route=>{reads++;return route.fulfill({json:{...initial,version:reads-1}});});
+  await page.goto('/');await expect(page.getByRole('checkbox')).toHaveCount(7);
+  await page.getByLabel('추가할 확장자').fill('draft');
+  const before=reads;await page.clock.fastForward(61000);
+  await expect.poll(()=>reads).toBeGreaterThan(before);
+  await expect(page.getByLabel('추가할 확장자')).toHaveValue('draft');
+});
+
+test('충돌 412는 자동 재조회하고 저장 명령을 재전송하지 않는다',async({page})=>{
+  let reads=0,writes=0;
+  await page.route('**/api/policy',route=>{reads++;return route.fulfill({json:{...initial,version:reads-1}});});
+  await page.route('**/api/policy/custom',route=>{writes++;return route.fulfill({status:412,json:{error:{code:'POLICY_VERSION_CONFLICT',message:'다른 화면에서 규칙이 바뀌었습니다.'}}});});
+  await page.goto('/');await page.getByLabel('추가할 확장자').fill('draft');await page.getByRole('button',{name:'추가',exact:true}).click();
+  await expect.poll(()=>reads).toBe(2);expect(writes).toBe(1);await expect(page.getByLabel('추가할 확장자')).toHaveValue('draft');
+  await expect(page.getByRole('status')).toContainText('최신 규칙을 불러왔습니다');
+});
+
+test('200개 모바일 태그의 표시·삭제·가로폭과 지연을 측정한다',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  let state={...initial,custom:Array.from({length:200},(_,i)=>({id:1000+i,extension:'x'+String(i).padStart(19,'0'),enabled:true})),customCount:200};
+  await page.route('**/api/policy',route=>route.fulfill({json:state}));
+  await page.route('**/api/policy/custom/*',route=>{const id=Number(new URL(route.request().url()).pathname.split('/').pop());state={...state,version:state.version+1,custom:state.custom.filter(x=>x.id!==id),customCount:state.customCount-1};return route.fulfill({json:state});});
+  const samples=[];
+  for(let i=0;i<3;i++){const start=Date.now();await page.goto('/');await expect(page.getByRole('listitem')).toHaveCount(200);samples.push(Date.now()-start);}
+  const width=await page.evaluate(()=>({viewport:innerWidth,body:document.documentElement.scrollWidth}));expect(width.body).toBeLessThanOrEqual(width.viewport);
+  const last=page.getByRole('button',{name:state.custom[199].extension+' 삭제',exact:true});await last.scrollIntoViewIfNeeded();const box=await last.boundingBox();expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);await last.click();
+  await expect(page.getByRole('listitem')).toHaveCount(199);await expect(page.getByLabel('커스텀 확장자 개수')).toHaveText('199/200');
+  const sorted=[...samples].sort((a,b)=>a-b);await mkdir('../test-results',{recursive:true});
+  await writeFile('../test-results/mobile-200-performance.json',JSON.stringify({scope:'CI browser, mocked 200-item API; not Hostinger latency',viewport:width,samplesMs:samples,p95Ms:sorted[sorted.length-1],deleteTarget:box,remaining:199},null,2));
+  await page.screenshot({path:'../test-results/mobile-200.png',fullPage:true});console.log('MOBILE_200 '+JSON.stringify({samplesMs:samples,p95Ms:sorted[sorted.length-1],width}));
+});
+
+test('429 요청 제한은 재전송 없이 안내한다',async({page})=>{
+  await page.route('**/api/policy',route=>route.fulfill({json:initial}));let posts=0;
+  await page.route('**/api/uploads',route=>{posts++;return route.fulfill({status:429,headers:{'Retry-After':'60'},json:{error:{code:'UPLOAD_BUSY',message:'요청이 많습니다. 60초 뒤 다시 시도해 주세요.'}}});});
+  await page.goto('/');await page.getByLabel('업로드할 파일').setInputFiles({name:'a.txt',mimeType:'text/plain',buffer:Buffer.from('safe fixture')});await page.getByRole('button',{name:'파일 업로드',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('60초');expect(posts).toBe(1);
 });
 
 test('T01 → T02 → T04: 실제 서버와 DB로 초기 상태·선택 저장·커스텀 추가 확인', async ({ page }) => {
@@ -163,6 +205,7 @@ test('DEC 업로드: 선택된 EXE 차단 → 해제 후 저장 → 커스텀 �
   await expect(exe).toBeChecked();
   await expect(exe).toBeEnabled();
   await page.getByLabel('업로드할 파일').setInputFiles({ name:'sample.EXE', mimeType:'image/jpeg', buffer:Buffer.from('MZ test fixture') });
+  await expect(page.getByTestId('policy-preview')).toContainText('차단 대상 (exe)');
   await page.getByRole('button').filter({hasText:'파일 업로드'}).click();
   await expect(page.getByRole('alert')).toContainText('차단한 확장자');
   await expect(page.getByText('업로드 완료',{exact:true})).toHaveCount(0);
@@ -170,9 +213,13 @@ test('DEC 업로드: 선택된 EXE 차단 → 해제 후 저장 → 커스텀 �
   await expect(exe).not.toBeChecked();
   await expect(exe).toBeEnabled();
   console.log('UX state before upload retry by user: '+await page.locator('body').ariaSnapshot());
+  await expect(page.getByTestId('policy-preview')).toContainText('확장자 차단 대상 아님');
   const upload=page.getByRole('button').filter({hasText:'파일 업로드'});await expect(upload).toBeEnabled();await upload.click();
   await expect(page.getByText('업로드 완료',{exact:true})).toBeVisible();
   await expect(page.getByText(/파일 ID:/)).toBeVisible();
+  await expect(page.getByLabel('업로드할 파일')).toHaveValue('');
+  expect(await page.getByLabel('업로드할 파일').evaluate(input=>input.files.length)).toBe(0);
+  await expect(page.getByTestId('policy-preview')).toHaveCount(0);
   await page.getByRole('button',{name:'sh 삭제',exact:true}).click();
   await expect(page.getByLabel('커스텀 확장자 개수')).toHaveText('0/200');
   await page.reload();

@@ -42,6 +42,7 @@ public class UploadService {
     public UploadResult upload(String name, long declaredSize, InputStream input, UUID requestId) {
         // Read exactly one committed snapshot before validating/copying this file.
         PolicyView policy = policies.get();
+        dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_VALIDATING",policy.version(),null);
         if (find(requestId) != null) throw new UploadException(HttpStatus.CONFLICT, "UPLOAD_REQUEST_EXISTS",
                 "같은 요청 번호로 저장된 파일이 있습니다. 저장 결과를 조회해 주세요.", null, null);
         String extension = FilenameRules.extension(name, policy.version());
@@ -73,6 +74,7 @@ public class UploadService {
                 try { storage.publish(staged, destination); }
                 catch (IOException error) { throw failure(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_STORAGE_FAILED", "파일을 저장하지 못했습니다.", policy, extension); }
                 jdbc.update("UPDATE upload_record SET state = 'READY' WHERE id = ?", id);
+                dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_READY",policy.version(),size);
                 return new UploadResult(id, name, extension, size, policy.version(), "READY", requestId);
             });
         } catch (DuplicateKeyException error) {
@@ -88,9 +90,10 @@ public class UploadService {
     }
     private void cleanup(Path path) {
         try { storage.remove(path); }
-        catch (IOException error) { log.error("Upload cleanup failed; reconciliation required", error); }
+        catch (IOException error) { log.error("Upload cleanup failed; reconciliation required; errorType={}",error.getClass().getSimpleName()); }
     }
     private UploadException failure(HttpStatus status, String code, String message, PolicyView policy, String extension) {
+        dev.mina.flow.operations.RequestLogFilter.result(code,policy.version(),null);
         return new UploadException(status, code, message, policy.version(), extension);
     }
     public record UploadResult(UUID id, String originalName, String extension, long sizeBytes, long policyVersion, String state, UUID requestId) {}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Alert, Button, Card, Checkbox, Input, Skeleton, Tag } from 'antd';
 import { usePolicy } from './usePolicy.js';
 import UploadPanel from './UploadPanel.jsx';
+import SessionPanel from './SessionPanel.jsx';
 
 export default function App() {
   const { policy, loading, pending, error, fieldError, notice, mustRefresh, refresh, updateFixed, createCustom, removeCustom } = usePolicy();
@@ -17,6 +18,7 @@ export default function App() {
     <div className="app">
       <header className="topbar"><span className="brand">파일 업로드 정책</span><span className="subtitle">차단 규칙 관리</span></header>
       <main>
+        <SessionPanel />
         <div className="intro"><p className="eyebrow">FILE POLICY</p><h1>보낼 수 있는 파일의<br />기준을 정하세요.</h1><p>차단할 확장자를 선택하거나 직접 추가하세요.<br />저장된 규칙은 새로고침 후에도 유지됩니다.</p></div>
 
         {error && <Alert role="alert" type="error" title={error} action={<Button onClick={refresh} disabled={loading || Boolean(pending)}>최신 규칙 다시 보기</Button>} />}
@@ -51,8 +53,8 @@ export default function App() {
             </Card>
           </div>
         )}
-        {policy && <UploadPanel disabled={disabled} />}
-        <p className="scope-note">현재 로컬 단일 정책입니다. 공개 배포 전 권한·보관 기간·전체 저장 한도를 결정해야 합니다.</p>
+        {policy && <UploadPanel disabled={disabled} policy={policy} />}
+        <p className="scope-note">현재 공유 정책입니다. 화면이 보이는 동안 60초마다 최신 규칙을 확인합니다. 사용자별 정책·편집 권한·파일 보관/총량 제한은 제공하지 않습니다.</p>
       </main>
     </div>
   );
