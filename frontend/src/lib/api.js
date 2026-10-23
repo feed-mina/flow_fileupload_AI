@@ -9,12 +9,19 @@ export class ApiError extends Error {
 }
 
 async function request(path, options = {}, valid = (body) => body && Array.isArray(body.fixed) && Array.isArray(body.custom) && Number.isSafeInteger(body.version)) {
-  const response = await fetch(path, { ...options, cache: 'no-store' });
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener('abort', abort, { once: true });
+  if (options.signal?.aborted) controller.abort();
+  const timeout = setTimeout(abort, 15000);
+  try {
+  const response = await fetch(path, { ...options, signal: controller.signal, cache: 'no-store' });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
+    const sizeLimit = response.status === 413;
     throw new ApiError(
-      body?.error?.message || '요청을 처리하지 못했습니다. 최신 규칙을 다시 확인해 주세요.',
-      body?.error?.code || 'REQUEST_FAILED',
+      sizeLimit ? '파일은 10 MiB, 전체 요청은 12 MiB 이하여야 합니다.' : body?.error?.message || '요청을 처리하지 못했습니다. 최신 규칙을 다시 확인해 주세요.',
+      sizeLimit ? 'UPLOAD_SIZE_LIMIT' : body?.error?.code || 'REQUEST_FAILED',
       response.status,
       body?.error,
     );
@@ -23,6 +30,10 @@ async function request(path, options = {}, valid = (body) => body && Array.isArr
     throw new ApiError('규칙 응답을 읽지 못했습니다. 다시 조회해 주세요.', 'INVALID_RESPONSE', response.status);
   }
   return body;
+  } finally {
+    clearTimeout(timeout);
+    options.signal?.removeEventListener('abort', abort);
+  }
 }
 
 export const getPolicy = (signal) => request('/api/policy', { signal });
@@ -43,11 +54,17 @@ export const deleteCustom = (id, version) => request(`/api/policy/custom/${encod
   method: 'DELETE', headers: { 'If-Match': `"${version}"` },
 });
 
-export const uploadFile = (file) => {
+const readyUpload = (value, requestId) => value?.state === 'READY' && typeof value.id === 'string'
+  && typeof value.originalName === 'string' && typeof value.extension === 'string'
+  && Number.isSafeInteger(value.sizeBytes) && value.sizeBytes > 0
+  && Number.isSafeInteger(value.policyVersion) && value.requestId === requestId;
+
+export const getUploadStatus = (requestId) => request(`/api/uploads/status/${encodeURIComponent(requestId)}`, {},
+  (value) => readyUpload(value, requestId));
+
+export const uploadFile = (file, requestId = crypto.randomUUID()) => {
   const body = new FormData();
   body.append('file', file);
-  return request('/api/uploads', { method: 'POST', body },
-    (value) => value?.state === 'READY' && typeof value.id === 'string'
-      && typeof value.originalName === 'string' && typeof value.extension === 'string'
-      && Number.isSafeInteger(value.sizeBytes) && value.sizeBytes > 0 && Number.isSafeInteger(value.policyVersion));
+  return request('/api/uploads', { method: 'POST', body, headers: { 'X-Upload-Request-Id': requestId } },
+    (value) => readyUpload(value, requestId));
 };

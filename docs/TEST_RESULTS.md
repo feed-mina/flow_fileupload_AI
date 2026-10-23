@@ -1,3 +1,7 @@
+# UX·예외 후속 구현 검증
+
+로컬 Node API 10개 PASS. 서버·브라우저·실제 Nginx 계약의 최신 판정과 실행 URL은 UX 후속 PR의 본문·Checks를 따른다. 상세 구성·실행 범위는 [UX_IMPLEMENTATION](UX_IMPLEMENTATION.md)을 참조한다. 아래 PR2/PR1 기록은 과거 실행이며 새 커밋 통과 판정이 아니다.
+
 # T01~T04 시험 결과
 
 ## DEC 후속 검증 — PR #2

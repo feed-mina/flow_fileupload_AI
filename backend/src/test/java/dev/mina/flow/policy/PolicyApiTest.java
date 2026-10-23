@@ -37,6 +37,9 @@ class PolicyApiTest {
 
     @BeforeEach
     void resetOnlyIsolatedTestDatabase() {
+        jdbc.execute("DROP TRIGGER IF EXISTS fail_audit ON policy_change");
+        jdbc.execute("DROP TRIGGER IF EXISTS fail_version ON policy_scope");
+        jdbc.update("DELETE FROM policy_change");
         jdbc.update("DELETE FROM extension_policy WHERE kind = 'CUSTOM'");
         jdbc.update("UPDATE extension_policy SET enabled = FALSE WHERE kind = 'FIXED'");
         jdbc.update("UPDATE policy_scope SET version = 0 WHERE id = 1");
@@ -134,6 +137,55 @@ class PolicyApiTest {
     }
 
     private ResponseEntity<JsonNode> get() { return rest.getForEntity("/api/policy", JsonNode.class); }
+
+    @Test
+    void policyVersionAndAuditCommitTogetherAndRepeatedDeleteHasNoExtraChange() {
+        var added = exchange("/custom",HttpMethod.POST,Map.of("extension","sh"),"\"0\"");
+        long id = added.getBody().get("custom").get(0).get("id").asLong();
+        assertThat(jdbc.queryForObject("SELECT action FROM policy_change WHERE policy_version=1",String.class)).isEqualTo("CUSTOM_ADDED");
+        assertThat(exchange("/custom/"+id,HttpMethod.DELETE,null,"\"1\"").getStatusCode().value()).isEqualTo(200);
+        assertThat(exchange("/custom/"+id,HttpMethod.DELETE,null,"\"2\"").getBody().get("error").get("code").asText()).isEqualTo("CUSTOM_NOT_FOUND");
+        assertThat(get().getBody().get("version").asLong()).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM policy_change",Integer.class)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT extension FROM policy_change WHERE action='CUSTOM_DELETED'",String.class)).isEqualTo("sh");
+    }
+
+    @Test
+    void auditFailureRollsBackFixedAddAndDeleteIncludingVersion() {
+        var added = exchange("/custom",HttpMethod.POST,Map.of("extension","sh"),"\"0\"");
+        long id = added.getBody().get("custom").get(0).get("id").asLong();
+        jdbc.execute("CREATE OR REPLACE FUNCTION fail_ux_write() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'private audit path /app/uploads'; END $$");
+        jdbc.execute("CREATE TRIGGER fail_audit BEFORE INSERT ON policy_change FOR EACH ROW EXECUTE FUNCTION fail_ux_write()");
+        try {
+            for (var result : List.of(exchange("/fixed/exe",HttpMethod.PUT,Map.of("enabled",true),"\"1\""),
+                    exchange("/custom",HttpMethod.POST,Map.of("extension","abc"),"\"1\""),
+                    exchange("/custom/"+id,HttpMethod.DELETE,null,"\"1\""))) {
+                assertThat(result.getStatusCode().value()).isEqualTo(503);
+                assertThat(result.getBody().get("error").get("requestId").asText()).isNotBlank();
+                assertThat(result.getBody().toString()).doesNotContain("private audit", "/app/uploads", "SQLException");
+            }
+            assertThat(fixed(get().getBody(),"exe")).isFalse();
+            assertThat(get().getBody().get("version").asLong()).isEqualTo(1);
+            assertThat(get().getBody().get("customCount").asInt()).isEqualTo(1);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM policy_change",Integer.class)).isEqualTo(1);
+        } finally { jdbc.execute("DROP TRIGGER fail_audit ON policy_change"); }
+    }
+
+    @Test
+    void versionFailureRollsBackPolicyAndWhitespaceInputIdentifiesField() {
+        var invalid = exchange("/custom",HttpMethod.POST,Map.of("extension","   "),"\"0\"");
+        assertThat(invalid.getStatusCode().value()).isEqualTo(400);
+        assertThat(invalid.getBody().get("error").get("code").asText()).isEqualTo("INVALID_EXTENSION");
+        assertThat(invalid.getBody().get("error").get("field").asText()).isEqualTo("extension");
+        jdbc.execute("CREATE OR REPLACE FUNCTION fail_ux_write() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'simulated version write failure'; END $$");
+        jdbc.execute("CREATE TRIGGER fail_version BEFORE UPDATE ON policy_scope FOR EACH ROW EXECUTE FUNCTION fail_ux_write()");
+        try {
+            assertThat(exchange("/fixed/exe",HttpMethod.PUT,Map.of("enabled",true),"\"0\"").getStatusCode().value()).isEqualTo(503);
+            assertThat(fixed(get().getBody(),"exe")).isFalse();
+            assertThat(get().getBody().get("version").asLong()).isZero();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM policy_change",Integer.class)).isZero();
+        } finally { jdbc.execute("DROP TRIGGER fail_version ON policy_scope"); }
+    }
 
     private ResponseEntity<JsonNode> exchange(String suffix, HttpMethod method, Object body, String version) {
         HttpHeaders headers = new HttpHeaders();

@@ -76,3 +76,8 @@ npx playwright install --with-deps chromium
 성공 응답에는 파일 ID·원본 표시 이름·실제 바이트 크기·적용 정책 버전·READY 상태가 들어갑니다. 본문은 `UPLOAD_ROOT`(Compose: `/app/uploads`)에 UUID `.bin`으로 저장하며 공개 URL은 제공하지 않습니다. MIME과 확장자는 파일 안전성 보증이 아닙니다. 내용·악성코드 검사는 도입하지 않았습니다.
 
 응답을 받지 못한 업로드는 자동 재전송하지 않습니다. 강제 종료나 DB 커밋 결과 불명 시에는 DB·파일을 대조해야 하며, [장애 후 대조 절차](docs/DEC_IMPLEMENTATION.md)를 따릅니다.
+
+
+## UX·예외 처리 후속 구현
+
+[채택 항목·응답 유실 조회 계약·시험 범위](docs/UX_IMPLEMENTATION.md)를 확인하세요. 미확인 업로드는 화면의 저장 결과 확인 버튼 또는 GET /api/uploads/status/{requestId}로 조회합니다. 404는 아직 처리 중일 수 있으며 자동 재전송하지 않습니다. 정책 변경·버전 증가·감사 이력은 함께 커밋됩니다. FE-U07은 이번 추가 구현 범위에서 제외했습니다.

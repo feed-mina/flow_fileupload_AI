@@ -50,4 +50,14 @@ public class PolicyRepository {
     public int deleteCustom(long id) {
         return jdbc.update("DELETE FROM extension_policy WHERE policy_id = 1 AND kind = 'CUSTOM' AND id = ?", id);
     }
+
+    public String customExtension(long id) {
+        return jdbc.query("SELECT extension FROM extension_policy WHERE policy_id = 1 AND kind = 'CUSTOM' AND id = ?",
+                (rs, row) -> rs.getString("extension"), id).stream().findFirst().orElse(null);
+    }
+
+    public void audit(String action, String extension, boolean enabled) {
+        jdbc.update("INSERT INTO policy_change (policy_id, policy_version, action, extension, enabled) SELECT id, version, ?, ?, ? FROM policy_scope WHERE id = 1",
+                action, extension, enabled);
+    }
 }
