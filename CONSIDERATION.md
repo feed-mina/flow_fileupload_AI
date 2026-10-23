@@ -21,7 +21,7 @@
 | 문제 / 질문 | 판단과 이유 | 구현·검증 및 한계 | 관련 항목·근거 |
 |---|---|---|---|
 | 확장자만으로 안전한가? | 필수 기능을 완성한 뒤, 실제 내용 검사·악성코드 검사는 확장자 필터링보다 상위의 확장 범위로 판단해 구현하지 않았다. 확장자 차단만으로 파일 안전성을 보장할 수 없으므로, 저장 파일은 서버에서 실행하거나 직접 공개하지 않는다 | 운영 내용 차단·악성코드 검사는 미구현. 시험용 내용 진단과 구분 | DEC-11, BE-S06 · [UploadService](backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [내용 진단 시험](backend/src/test/java/dev/mina/flow/upload/ContentExtensionMatrixTest.java) |
-| 실제 내용·이름이 다르면? | PDF/PNG/GIF 샘플과 Tika 등록 단일 ASCII 이름 1,284개를 진단. 인식 불가능한 경우를 UNVERIFIABLE로 남김 | PNG 내용을 다른 이름으로 바꾼 시험은 모든 형식의 유효한 샘플 시험이 아니다. MATCH 1·MISMATCH 1,206·미판정 77 | BE-S06, T19 · [시험 결과](docs/TEST_RESULTS.md) |
+| 실제 내용·이름이 다르면? | 파일의 확장자만 바꿔 필터링을 우회할 수 있는지와 실제 내용을 어디까지 판별할 수 있는지 확인하기 위해 시험했다. PDF/PNG/GIF 샘플과 Tika 등록 단일 ASCII 확장자 이름 1,284개를 진단하고, 판별할 수 없는 경우는 UNVERIFIABLE로 구분했다 | 시험 결과를 운영 업로드 차단에는 적용하지 않았다. PNG 내용을 다른 이름으로 바꾼 시험은 모든 형식의 유효한 샘플 시험이 아니다. MATCH 1·MISMATCH 1,206·미판정 77 | BE-S06, T19 · [시험 결과](docs/TEST_RESULTS.md) |
 | MIME 타입을 위조하면? | MIME(Multipurpose Internet Mail Extensions, 파일 내용 유형) 헤더를 허용 근거로 사용하지 않음 | 확장자·파일명·크기·저장 경로 검증. MIME이나 확장자만으로 내부 내용의 안전성을 판단하지 않음 | BE-S05·06 · [UploadController](backend/src/main/java/dev/mina/flow/upload/UploadController.java) |
 | 대소문자·유니코드 입력은? | 정책 입력 앞뒤 공백과 선행 점 1개를 제거하고 원문 ASCII 영문·숫자 1~20자를 검사한 뒤 소문자화. 서로 다른 입력을 같은 키로 정규화 | `.PDF`와 `pdf`는 같은 값. 유니코드를 먼저 소문자화해 영문으로 바뀌는 우회를 방지 | DEC-02, REQ-05·09 · [PolicyService](backend/src/main/java/dev/mina/flow/policy/PolicyService.java) |
 | 이중·복합 확장자는? | 마지막 점 뒤만 비교. `file.exe.txt`는 txt, `archive.tar.gz`는 gz. 규칙을 단순하고 예측 가능하게 유지 | 커스텀 `tar.gz`는 거부. 중간 확장자·압축 파일 내부 검사는 없음 | DEC-04·05 · [FilenameRules](backend/src/main/java/dev/mina/flow/upload/FilenameRules.java) |
