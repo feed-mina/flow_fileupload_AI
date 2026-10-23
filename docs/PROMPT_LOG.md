@@ -36,3 +36,5 @@
 - 구현: V3 정책 감사 및 upload request_id, GET 조회·중복 번호 409, 클라이언트 15초 중단·sessionStorage 복원·재전송 금지, 필드 근처 오류·조회 실패 상태.
 - 검증: 로컬 API 10개 PASS. 실제 DB/파일 장애 주입·응답 유실 브라우저·Nginx 413은 CI에서 검증하고 최종 PR에 근거 기록.
 - 도구: 소스/문서 분석, PostgreSQL 모범 사례, GitHub API·Actions. FE-U07의 신규 기능/완료 판정 제외, 기존 접근성은 제거하지 않음.
+
+- 첫 CI 실제 결과: https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902350802, 커밋 f605e640965336730ef6c744577a5610622f55c0. 서버 30·Node 10·브라우저 11·재시작·Nginx 413·빌드/구성 모두 통과. 최종 커밋 판정은 PR #3 본문/Checks에 기록.

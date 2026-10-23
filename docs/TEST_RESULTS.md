@@ -1,6 +1,6 @@
 # UX·예외 후속 구현 검증
 
-로컬 Node API 10개 PASS. 서버·브라우저·실제 Nginx 계약의 최신 판정과 실행 URL은 UX 후속 PR의 본문·Checks를 따른다. 상세 구성·실행 범위는 [UX_IMPLEMENTATION](UX_IMPLEMENTATION.md)을 참조한다. 아래 PR2/PR1 기록은 과거 실행이며 새 커밋 통과 판정이 아니다.
+로컬 Node API 10개 PASS. 첫 UX 구현 커밋 `f605e640965336730ef6c744577a5610622f55c0`의 [실제 CI](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902350802)는 서버 30개·Node 10개·브라우저 11개·실제 재시작 T01~T04·실제 Nginx 413·설치/빌드/Compose config 모두 PASS. 서버 skip 0, 브라우저 retry 0. 이후 정리한 최종 커밋의 판정과 실행 URL은 [PR #3 본문](https://github.com/feed-mina/flow_fileupload_AI/pull/3)·[Checks](https://github.com/feed-mina/flow_fileupload_AI/pull/3/checks)를 따른다. 상세 구성·실행 범위는 [UX_IMPLEMENTATION](UX_IMPLEMENTATION.md)을 참조한다. 아래 PR2/PR1 기록은 과거 실행이며 새 커밋 통과 판정이 아니다.
 
 # T01~T04 시험 결과
 

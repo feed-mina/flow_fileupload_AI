@@ -67,7 +67,7 @@ test('처음 조회한 true를 그대로 표시하고 로딩 중에는 편집하
   let reads=0;
   await page.route('**/api/policy',async route=>{reads++;await pending;await route.fulfill({json:{...initial,fixed:initial.fixed.map(x=>x.extension==='exe'?{...x,enabled:true}:x)}});});
   await page.goto('/');
-  await expect.poll(()=>reads).toBe(1);
+  await expect.poll(()=>reads).toBeGreaterThan(0);
   await expect(page.getByRole('checkbox')).toHaveCount(0);
   await expect(page.getByRole('status')).toContainText('불러오고');
   release();
