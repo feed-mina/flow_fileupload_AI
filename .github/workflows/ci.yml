@@ -39,6 +39,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.13.0'
+      - name: Deployment helper and public verifier checks
+        run: |
+          python3 scripts/test-configure-live-origin.py
+          node --check frontend/e2e/public-smoke.mjs
       - name: Backend PostgreSQL integration tests
         run: mvn -B -ntp -f backend/pom.xml verify
       - name: Install frontend dependencies
@@ -74,6 +78,7 @@ jobs:
           POSTGRES_PASSWORD: ci-disposable-password
         run: |
           APP_DB_PASSWORD=ci-disposable-app-password docker compose config --quiet
+          APP_VERSION=${{ github.sha }} APP_DB_PASSWORD=ci-disposable-app-password docker compose -p flow-fileupload -f compose.yml -f compose.vps-live.yml config --quiet
           APP_VERSION=${{ github.sha }} APP_DB_PASSWORD=ci-disposable-app-password APP_ALLOWED_ORIGINS=https://app.example.invalid API_HOST=api.example.invalid docker compose -f compose.hostinger.yml config --quiet
           docker run --rm --network none -e API_HOST=api.example.invalid -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - name: Nginx UX error contract

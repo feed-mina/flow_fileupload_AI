@@ -1,0 +1,19 @@
+# Actual Traefik deployment. Secure cookies are an added production setting.
+services:
+  db:
+    restart: unless-stopped
+  backend:
+    restart: unless-stopped
+    environment:
+      SESSION_COOKIE_SECURE: 'true'
+  frontend:
+    image: flow-policy-frontend:${APP_VERSION:?Exact source commit required}
+    restart: unless-stopped
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: flow-fileupload_default
+      traefik.http.routers.flow-fileupload.rule: Host(`flow.srv1869569.hstgr.cloud`)
+      traefik.http.routers.flow-fileupload.entrypoints: websecure
+      traefik.http.routers.flow-fileupload.tls: "true"
+      traefik.http.routers.flow-fileupload.tls.certresolver: letsencrypt
+      traefik.http.services.flow-fileupload.loadbalancer.server.port: "80"

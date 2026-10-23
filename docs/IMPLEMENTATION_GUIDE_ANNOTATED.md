@@ -12,7 +12,7 @@
 > **관련 REQ 읽기:** ‘직접’은 과제에 명시된 요구, ‘연관’은 그 요구를 지원하는 설계 판단이다. REQ-14의 고려사항 기록 의무가 모든 권장 기능의 구현 의무를 뜻하지는 않는다. DEC 번호와 REQ 번호가 일대일로 대응하는 것은 아니다.
 
 
-## main 반영용 구현 현황 — Hostinger·Vercel 준비 업데이트
+## PR #6 반영용 구현 현황 — Hostinger·Vercel 실제 배포·공개 검증
 
 **기준 코드:** [d623849](https://github.com/feed-mina/flow_fileupload_AI/commit/d623849b1d6ee2dc8a37f3dace26012e828b5b65). 기존 원문 위치 링크는 이전 원문을, 이번 변경 근거 링크는 위 코드 스냅샷을 가리킨다. 이 문서의 기존 행은 과제/초안이고 마지막 상태·근거 열이 현재 구현 경계다. REQ(Requirement)는 요구사항, DEC(Decision)는 설계 결정이다.
 
@@ -29,10 +29,10 @@
 
 | 묶음 | 구현 | 부분 구현 | 미구현 | 범위 제외 | 합계 |
 |---|---:|---:|---:|---:|---:|
-| REQ | 13 | 2 | 0 | 0 | 15 |
+| REQ | 14 | 1 | 0 | 0 | 15 |
 | DEC | 11 | 1 | 1 | 0 | 13 |
-| 영역별 고려사항 | 78 | 19 | 10 | 1 | 108 |
-| 시험 시나리오 | 19 | 6 | 3 | 0 | 28 |
+| 영역별 고려사항 | 80 | 22 | 5 | 1 | 108 |
+| 시험 시나리오 | 20 | 6 | 2 | 0 | 28 |
 
 묶음 간 항목은 서로 연결/중첩되므로 합쳐서 기능 완료율로 계산하지 않는다.
 
@@ -96,7 +96,7 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 | REQ-09 | 중복 추가 방지 | 같은 정규화 값이 DB에 한 건만 존재 | 구현 | 정규화·UNIQUE·중복 오류. 같은 버전의 경쟁 쓰기는 412도 가능. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L15) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L39) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) |
 | REQ-10 | 실제 파일 업로드에 정책 적용 | 직접 API 호출도 차단·허용이 동일 | 구현 | 서버가 저장 정책 스냅샷으로 직접 API도 차단. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L44) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
 | REQ-11 | 차단 이유와 정상 업로드 성공 표시 | 실패 사유와 실제 파일 저장 증거 | 구현 | 차단 사유·정책 버전·READY 성공 표시와 실제 파일 저장 시험. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L61) |
-| REQ-12 | GitHub·공개 배포 주소 제출 | 다른 브라우저에서 접속·동작 확인 | 부분 구현 | GitHub 제출·문서는 존재. 공개 호스팅·배포 주소·외부 접속 검증 미완료. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) |
+| REQ-12 | GitHub·공개 배포 주소 제출 | 다른 브라우저에서 접속·동작 확인 | 구현 | GitHub와 공개 Vercel 주소 제출, 공개 Chromium에서 화면·정책 변경·파일 업로드·상태 조회·크기 경계 11개 통과. [공개 시험](POST_DEPLOYMENT_CHECKS.md) · [README](../README.md) |
 | REQ-13 | 테이블 스키마·README 제출 | 컬럼·타입·제약·인덱스 및 실행법 존재 | 구현 | V1~V3 SQL·제약/인덱스·실행 README 존재. CI 새 DB 마이그레이션 통과. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
 | REQ-14 | 고려사항 문서 제출 | 각 관점의 채택·제외 이유 확인 | 구현 | 가이드·DEC·UX 채택/한계 문서 존재. 모든 권장 기능의 구현 완료를 뜻하지 않음. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) |
 | REQ-15 | AI 활용 기록 제출 | 입력·의도·검증·수정·도구·회고 확인 | 부분 구현 | 요청·의도·수정·도구·검증 기록 존재. 지원자 본인의 최종 회고·제출본 점검은 남음. [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) |
@@ -317,8 +317,8 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 
 | ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
 |---|---|---|---|---|---|---|
-| DP-U01 | 필수 | 평가자가 접속할 URL 없음 | 호스팅 선정 후 공개 주소를 README에 기입 | 로그인하지 않은 다른 브라우저 접속 | 미구현 | 공개 호스트·주소 없음, README는 localhost 실행만 제공. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L19) |
-| DP-U02 | 권장 | 무료 서버 잠자기·첫 응답 지연 | 실제 서비스 정책을 확인하고 첫 로딩 안내 | 일정 시간 미접속 후 재호출 | 미구현 | 호스팅 미선정으로 휴면/콜드 스타트 정책 확인·전용 안내·실제 시험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| DP-U01 | 필수 | 평가자가 접속할 URL 없음 | 호스팅 선정 후 공개 주소를 README에 기입 | 로그인하지 않은 다른 브라우저 접속 | 구현 | Vercel 공개 URL을 README에 기입하고 별도 Actions Chromium에서 첫 화면·정책 변경·업로드를 실제 확인. [공개 시험](POST_DEPLOYMENT_CHECKS.md) |
+| DP-U02 | 권장 | 무료 서버 잠자기·첫 응답 지연 | 실제 서비스 정책을 확인하고 첫 로딩 안내 | 일정 시간 미접속 후 재호출 | 부분 구현 | Docker 가능한 VPS에 restart: unless-stopped 적용. 초기 호스팅 미선정 설명을 갱신. 장기 유휴 후 응답 지연 전용 시험·안내는 미완료. [실제 배포](DEPLOYMENT_PROGRESS_2026-10-23.md) |
 | DP-U03 | 권장 | 앱 시작 전 프록시 연결 | readiness 이후 요청 전달 | 새 배포 직후 응답 점검 | 미구현 | frontend depends_on은 시작 순서만 지정. backend readiness/health 조건으로 프록시 전달 제어 없음. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L27) |
 | DP-U04 | 권장 | React 하위 경로 새로고침 실패 | 정적 서버의 SPA fallback 설정 | 하위 주소 직접 접속·새로고침 | 구현 | Nginx SPA fallback 구성. 하위 경로 새로고침 전용 배포 시험은 미실행. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf#L14) |
 
@@ -329,7 +329,7 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 | DP-S01 | 권장 | DB 포트 인터넷 노출 | 내부 네트워크만 연결, 외부 publish 제외 | 외부에서 DB 접속 실패 | 구현 | Compose DB ports 미공개·내부 통신. 실제 배포 외부 접속 차단 검증은 미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
 | DP-S02 | 권장 | 컨테이너 관리자 권한 | 앱은 비관리자 사용자로 실행 | 컨테이너 UID·쓰기 권한 확인 | 부분 구현 | 백엔드 USER flow. 프론트 Nginx 컨테이너 전체 비루트 구성/실제 UID·권한 시험은 미완료. [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/Dockerfile#L11) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) |
 | DP-S03 | 권장 | 이미지에 비밀번호 포함 | 런타임 비밀값 주입, .dockerignore로 .env 제외 | 이미지·빌드 로그 검사 | 구현 | 앱에는 flow_app 자격만, 관리자 비밀은 일회성 migrator만 사용. 런타임 환경변수·.dockerignore 유지. 실제 Hostinger 이미지/비밀 주입 점검은 배포 후 수행. [compose.hostinger.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/compose.hostinger.yml) · [FlowPolicyApplication.java](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/backend/src/main/java/dev/mina/flow/FlowPolicyApplication.java) |
-| DP-S04 | 권장 | 전송 구간 노출 | 호스팅에서 HTTPS 구성 | 브라우저에서 HTTPS 업로드 성공 | 부분 구현 | Hostinger Caddy TLS 구성과 Vercel/동일 사이트 하위 도메인 연결 절차 작성. 실제 도메인·인증서 발급·공개 HTTPS 업로드 미실행. [compose.hostinger.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/compose.hostinger.yml) · [HOSTINGER_VERCEL_DEPLOYMENT.md](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/docs/HOSTINGER_VERCEL_DEPLOYMENT.md) |
+| DP-S04 | 권장 | 전송 구간 노출 | 호스팅에서 HTTPS 구성 | 브라우저에서 HTTPS 업로드 성공 | 구현 | 기존 Traefik HTTPS와 Vercel 외부 rewrite 경로에서 실제 업로드 성공·세션 Secure 쿠키 확인. Caddy는 계획 예시이며 실제 적용 구성과 구분. [공개 시험](POST_DEPLOYMENT_CHECKS.md) |
 | DP-S05 | 권장 | 관리 엔드포인트 노출 | 필요한 health만 제한 노출 | env·heapdump 외부 접근 거부 | 구현 | Actuator health만 노출·상세 숨김. 공개 호스트 env/heapdump 접근 시험 미실행. [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L35) |
 | DP-S06 | 권장 | 여러 단계의 크기 제한 불일치 | 프록시·컨테이너·앱에 DEC-07 기준 반영 | 각 제한 경계에서 오류 안내 확인 | 구현 | Nginx 12m·multipart 10/12MB·Tomcat 12MB 일치. 앱 경계·별도 실제 Nginx 시험 통과. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) · [verify-proxy.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-proxy.mjs) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L159) |
 
@@ -340,8 +340,8 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 | DP-P01 | 필수 | 재배포 후 정책 사라짐 | PostgreSQL 데이터 경로에 영속 볼륨 연결 | 컨테이너 재생성 후 정책 재조회 | 구현 | policy_data 볼륨 구성 존재. 실제 컨테이너 재생성 보존은 미검증이며 Java 프로세스 재시작 시험과 구별. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L9) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
 | DP-P02 | 권장 | 재배포 후 파일 사라짐 | 업로드 루트를 별도 영속 볼륨에 연결 | 재생성 후 파일 존재 확인 | 구현 | upload_data 영속 볼륨 구성 존재. 실제 컨테이너 재생성 후 파일 유지 미검증. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L23) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
 | DP-P03 | 권장 | DB·파일 볼륨 혼동 | pgdata와 uploads를 분리 | 연결 위치와 권한 확인 | 구현 | policy_data/upload_data 경로 분리. 실제 컨테이너 쓰기 권한 확인 미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
-| DP-P04 | 권장 | 환경별 설정 섞임 | 개발·시험·운영 DB와 저장 경로 분리 | 시험 파일이 운영에 생성되지 않음 | 부분 구현 | 시험 DB·업로드 임시 루트는 분리. 공개 운영 환경은 없어 운영 분리 설정/시험 미완료. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml#L57) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
-| DP-P05 | 권장 | 호스팅의 임시 디스크 | 선택 환경의 영속 디스크 지원을 확인 | 실제 재배포 후 데이터 유지 실험 | 미구현 | 호스팅 영속 디스크 미선정·재배포 유지 실험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| DP-P04 | 권장 | 환경별 설정 섞임 | 개발·시험·운영 DB와 저장 경로 분리 | 시험 파일이 운영에 생성되지 않음 | 부분 구현 | 실제 Hostinger 운영 DB/업로드 볼륨과 Actions 격리 시험 DB를 구분. 공개 smoke 시험 파일은 의도적으로 운영에 생성되며 원문 대신 ID·크기만 기록. 별도 운영환경 전수 점검은 미완료. [시험 결과](evidence/public-deployment-2026-10-23.json) |
+| DP-P05 | 권장 | 호스팅의 임시 디스크 | 선택 환경의 영속 디스크 지원을 확인 | 실제 재배포 후 데이터 유지 실험 | 부분 구현 | 실제 policy_data/upload_data 영속 볼륨 구성 적용. 사용자 지정으로 컨테이너 재생성 유지 시험은 이번에 제외하며 완료로 판단하지 않음. [실제 배포](DEPLOYMENT_PROGRESS_2026-10-23.md) |
 
 ### 9.4 운영 관점
 
@@ -349,10 +349,10 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 |---|---|---|---|---|---|---|
 | DP-O01 | 권장 | 실행 순서만 맞고 DB는 준비 안 됨 | DB healthcheck와 앱 연결 재시도 설정 | DB 시작을 지연시켜 앱 기동 | 부분 구현 | DB healthcheck/service_healthy 존재. 앱 연결 재시도 정책·DB 지연 기동 실험 미완료. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L26) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L9) |
 | DP-O02 | 권장 | 무제한 로그·업로드로 디스크 고갈 | 로그 순환·업로드 총량·잔여 공간 점검 | 제한 임계치 도달 시 동작 | 미구현 | Docker 로그 순환·총량 제한·디스크 지표/알람 없음. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
-| DP-O03 | 권장 | 버전 없는 이미지 재현 실패 | 구체 태그·다이제스트와 배포 커밋 기록 | 같은 커밋 재빌드·실행 | 부분 구현 | 6개 이미지 digest 확인·고정, 배포 앱 APP_VERSION 커밋 필수. 실제 서버 이미지 빌드/배포의 image ID 연결은 호스팅 선정 후 확인. [image-lock.json](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/deploy/image-lock.json) · [compose.hostinger.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/d623849b1d6ee2dc8a37f3dace26012e828b5b65/compose.hostinger.yml) |
-| DP-O04 | 권장 | 실패 배포 복구 | 이전 이미지와 호환되는 DB 변경 순서 설계 | 이전 버전 복귀 시험 | 미구현 | 이전 이미지 보관·DB 호환 롤백 순서·복귀 시험 없음. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| DP-O03 | 권장 | 버전 없는 이미지 재현 실패 | 구체 태그·다이제스트와 배포 커밋 기록 | 같은 커밋 재빌드·실행 | 부분 구현 | 기반 이미지 digest 고정·전체 커밋 태그와 최초 서버 소스 기록, 실제 Traefik override 버전 관리. 실행 이미지 ID/현재 Vercel Source 확인은 미완료이며 명령·기록표 제공. [배포 재현](POST_DEPLOYMENT_CHECKS.md) |
+| DP-O04 | 권장 | 실패 배포 복구 | 이전 이미지와 호환되는 DB 변경 순서 설계 | 이전 버전 복귀 시험 | 부분 구현 | 이전 전체 커밋 이미지 확인·DB 호환성 확인·앱만 복귀하는 절차 작성. 실제 서버 복귀 시험은 미실행. [복귀 절차](POST_DEPLOYMENT_CHECKS.md) |
 | DP-O05 | 권장 | 볼륨을 백업으로 오해 | 별도 백업과 복원 절차 작성 | 다른 볼륨으로 복원 | 부분 구현 | 볼륨 유지와 데이터 삭제 경고·수동 동시 백업/대조 문서 존재. 복원 가능한 백업 자동화·다른 볼륨 복원 시험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L28) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L63) |
-| DP-O06 | 권장 | 면접 당일 서비스 중단 | 면접 전 접속·DB·업로드·용량 점검 | 공개 URL에서 실제 시험 결과 기록 | 미구현 | 공개 서비스가 없어 면접 전 공개 URL·업로드·용량 점검 기록 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| DP-O06 | 권장 | 면접 당일 서비스 중단 | 면접 전 접속·DB·업로드·용량 점검 | 공개 URL에서 실제 시험 결과 기록 | 부분 구현 | 공개 URL의 화면·정책 변경·업로드·경계 11개 실제 시험 통과. 면접 당일 재점검·디스크 잔여 용량 확인은 별도. [공개 시험](POST_DEPLOYMENT_CHECKS.md) |
 
 Docker 볼륨은 컨테이너 수명과 분리해 데이터를 유지하지만, 호스트 장애에 대한 별도 백업을 대신하지 않는다.
 PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버전 설명을 확인한 뒤 연결한다.
@@ -366,7 +366,7 @@ PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버
 |---|---|---|---|---|---|---|
 | GH-U01 | 필수 | 처음 보는 사람이 실행 못 함 | README에 준비물·환경변수·명령·접속 주소 | 새 폴더에서 문서대로 실행 | 구현 | 준비물·환경변수·명령·localhost 설명 존재, CI 새 checkout 빌드/시험. 새 환경 전체 Compose 실행 미검증. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
 | GH-U02 | 권장 | 개발 오류와 사용자 오류 혼동 | TROUBLESHOOTING에 증상·원인·확인·해결 분리 | DB 연결·413·볼륨 권한 사례 점검 | 부분 구현 | README/DEC/UX/시험 결과에 오류·복구 설명 있음. 독립 TROUBLESHOOTING·권한 등 모든 사례별 확인 절차 미완료. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
-| GH-U03 | 필수 | 제출 링크 누락 | 저장소·배포·고려사항·AI 기록 링크를 모음 | 모든 링크를 새 브라우저에서 확인 | 부분 구현 | 저장소·가이드·보고서·기록 링크 있음. 공개 배포 링크는 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) · [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) |
+| GH-U03 | 필수 | 제출 링크 누락 | 저장소·배포·고려사항·AI 기록 링크를 모음 | 모든 링크를 새 브라우저에서 확인 | 부분 구현 | 공개 URL·저장소·가이드·AI 기록·실제 시험 근거를 제출 점검표에 연결. 지원자 본인 최종 회고와 최종 제출본의 모든 링크 점검은 남음. [제출 점검표](SUBMISSION_CHECKLIST.md) |
 
 ### 10.2 검증·보안 관점
 
@@ -374,7 +374,7 @@ PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버
 |---|---|---|---|---|---|---|
 | GH-S01 | 권장 | 비밀값 커밋 | .env 제외, .env.example은 이름과 예시만 저장 | git diff·추적 파일 확인 | 구현 | .env 제외·.env.example 구성 존재. 전체 과거 Git 이력 비밀 스캔은 미실행. [.gitignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.gitignore#L1) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
 | GH-S02 | 권장 | 업로드·개인정보 커밋 | 파일 저장 디렉터리·실제 DB 백업 제외 | 추적 파일에 본문·dump 없음 | 부분 구현 | uploads/pgdata/로그 등 제외·현재 트리에 실제 업로드/DB dump 없음. 임의 *.dump/*.sql 백업의 전역 제외·과거 이력 전수 검사는 없음. [.gitignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.gitignore) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
-| GH-S03 | 권장 | 자동화에 배포 비밀 노출 | GitHub Actions Secrets 사용, 로그 출력 금지 | workflow 권한·로그 검사 | 부분 구현 | Actions 최소 contents:read·격리 시험 암호만 사용. 실제 배포 Secrets/배포 경로는 미구성. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml#L8) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| GH-S03 | 권장 | 자동화에 배포 비밀 노출 | GitHub Actions Secrets 사용, 로그 출력 금지 | workflow 권한·로그 검사 | 부분 구현 | 운영 암호는 서버 전용 .env에 보관하고 Vercel·공개 Actions 시험에 넣지 않음. Hostinger는 수동 배포이며 배포 Secrets/자동 원격 배포 CI는 구성하지 않음. [실제 배포](DEPLOYMENT_PROGRESS_2026-10-23.md) |
 | GH-S04 | 권장 | 의존성·외부 코드 무검토 수용 | 잠금 파일·공급처·라이선스·보안 경고 확인 | 새 의존성 추가의 근거 기록 | 부분 구현 | 잠금 파일·라이선스/참고 자료·선택 이유 존재. 지속 보안 감사/취약점 검사 CI 없음. [package-lock.json](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/package-lock.json) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [pom.xml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/pom.xml) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
 
 ### 10.3 정책·데이터 관점
@@ -516,8 +516,8 @@ REST(Representational State Transfer) 방식의 경로와 HTTP 상태 코드를 
 | T24 | DB 중지 상태 업로드 | 정책 조회 실패로 503, 우회 허용 안 됨 | BE-O03 | 부분 구현 | 정책 조회 예외 주입으로 파일 생성 전 중단·503 확인. 실제 PostgreSQL 프로세스 중지 시험은 아님. [UploadServiceTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadServiceTest.java#L17) |
 | T25 | 파일 저장 후 컨테이너 재생성 | 정책·업로드 파일 유지 | DP-P01~02 | 미구현 | 영속 볼륨 구성만 존재. 컨테이너 재생성 후 DB·파일 유지 시험 미작성·미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
 | T26 | 사용자 파일명이 태그 모양 | 실행되지 않고 텍스트로 표시 | FE-S02 | 미구현 | JSX 텍스트 표시는 구현. 태그 모양 파일명 전용 실행 방지 화면 시험 미작성·미실행. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L64) |
-| T27 | 공개 사이트 다른 브라우저로 접속 | 첫 화면·정책 저장·업로드 동작 | REQ-12 | 미구현 | 공개 배포·다른 브라우저 외부 접속 시험 미실행. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
-| T28 | 같은 Git 커밋으로 새 환경 실행 | 문서대로 동일 동작 | GH-U01, GH-O02 | 부분 구현 | CI 새 checkout 빌드·시험 통과. README대로 전체 Docker 이미지/Compose 새 환경 재현 시험 미실행. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
+| T27 | 공개 사이트 다른 브라우저로 접속 | 첫 화면·정책 저장·업로드 동작 | REQ-12 | 구현 | 별도 Actions Chromium에서 실제 공개 화면·정책 저장/원복·커스텀 추가/삭제·업로드·상태 조회·경계 검증 11개 통과. 여러 브라우저 종류 전수 시험은 아님. [실행 근거](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812) |
+| T28 | 같은 Git 커밋으로 새 환경 실행 | 문서대로 동일 동작 | GH-U01, GH-O02 | 부분 구현 | 격리 CI 빌드와 실제 Hostinger 최초 Docker 빌드/기동 확인. 실제 Traefik override를 버전 관리했으나 새 환경 전체 Docker 재현·운영 이미지 ID 연결은 미완료. [배포 재현](POST_DEPLOYMENT_CHECKS.md) |
 
 유효한 작은 파일·크기 조절한 텍스트 등 무해한 시험 자료를 사용한다. 실제 악성코드를 내려받거나 실행할 필요는 없다.
 
@@ -822,3 +822,19 @@ BE-O06 중 분당/동시 처리 제한과 UI 안내는 구현했다. **정상 �
 - 실제 DNS·TLS 인증서·쿠키 전달·전체 Docker 기동·컨테이너 재생성/파일 보존·공개 URL 점검은 아직 수행하지 않았다.
 
 공식 자료: [Hostinger PostgreSQL VPS](https://www.hostinger.com/applications/postgresql), [Hostinger 백업/스냅샷](https://www.hostinger.com/support/1583232-how-to-back-up-or-restore-a-vps-at-hostinger/), [Vercel 외부 rewrite](https://vercel.com/docs/routing/rewrites), [Spring Security CSRF](https://docs.spring.io/spring-security/reference/6.5/servlet/exploits/csrf.html), [Spring Boot 구조화 로그](https://docs.spring.io/spring-boot/3.5/reference/features/logging.html), [Apache Tika 내용 감지](https://tika.apache.org/3.2.3/api/org/apache/tika/detect/Detector.html).
+
+## 24. 실제 배포 후 공개 검증 — PR #6
+
+[공개 검증 보고서](POST_DEPLOYMENT_CHECKS.md)의 6개 항목을 적용한다. 2026-10-23 17:47 한국 시간 실제 공개 Chromium에서 11개가 통과했다. 출처 포함 세션200, HttpOnly/Secure/Lax 쿠키, 토큰 없는 변경403, 정상 토큰 저장/원복, 커스텀 차단422, 허용 업로드201/상태200, 10MiB−1과 정확히10MiB 저장, 초과413을 확인했다.
+
+이 검증은 현재 배포된 서비스를 호출한 결과이며 PR #6의 새 서버 설정을 실제 적용했다는 증거는 아니다. 서버 전용 override와 Origin 설정 도구는 재현 가능한 후속 배포를 위해 추가했다. 현재 .env 원문이나 실행 이미지 ID를 직접 조회했다고 주장하지 않는다.
+
+| 구분 | 경계 |
+|---|---|
+| 이번에 확인 | 공개 화면·정책 변경/원복·업로드·세션/CSRF·크기 경계 |
+| 준비하고 아직 실행하지 않음 | 서버 재배포·실제 이미지 ID 기록·이전 이미지 복귀 |
+| 사용자 지정 제외 | 컨테이너 재생성 영속성·백업·복원 시험 |
+| 본인 마무리 | 지원자 최종 회고·제출 직전 점검 |
+| 기존 보류 유지 | DEC-13, BE-S11, DB-O05 cron 설치, BE-O07 신규 readiness/자동복구, FE-U07 확장 |
+
+운영 업로드 시험 파일3개·총20,971,548바이트는 남아 있으며 요청 번호는 [증거 JSON](evidence/public-deployment-2026-10-23.json)에 기록했다. 정책 값은 원복했지만 버전·감사 이력은 정상 변경 이력으로 유지한다.

@@ -3,6 +3,8 @@
 작성일: 2026-10-23 (한국 시간)  
 저장소: [feed-mina/flow_fileupload_AI](https://github.com/feed-mina/flow_fileupload_AI)
 
+> **후속 검증 추가:** 최초 배포 이후 실제 Vercel 공개 브라우저 시험 11개가 통과했습니다. 아래 1~9절은 최초 배포 시점 기록이며, 최신 검증 결과는 마지막 10절과 [배포 후 점검 보고서](POST_DEPLOYMENT_CHECKS.md)를 따릅니다.
+
 > Hostinger의 앱 실행과 HTTPS·정책 조회 API는 확인했다. Vercel의 프론트엔드 배포 성공도 확인했다. 다만 Vercel 화면에서 정책 저장·파일 업로드가 정상 동작하는지는 아직 확인하지 못했다. 서버의 Vercel 출처 허용 설정은 명령어를 안내한 상태이며, 실행 완료 증거는 없다.
 
 ## 1. 배포 주소와 구성
@@ -246,3 +248,29 @@ curl -i https://flow-fileupload-ai.vercel.app/api/policy
 - 실제 Vercel 구성은 별도 API 절대 주소를 빌드에 넣는 방식 대신 외부 rewrite를 적용했다.
 - 이번 기록은 배포 진행·확인 결과이며, 기존 기능 전체의 재시험 결과를 대체하지 않는다.
 - [운영 예약 안내서](OPERATIONS_SCHEDULE_GUIDE.md)의 cron은 설치하지 않았다.
+
+## 10. 후속 공개 검증 — PR #6
+
+2026-10-23 **17:47~17:48 한국 시간**에 GitHub Actions의 별도 Chromium이 실제 공개 주소를 호출했다. 최초 기록에서 미확인이었던 화면·변경·업로드를 이번에 시험했다.
+
+| 후속 시험 | 실제 결과 |
+|---|---|
+| Vercel HTML·React 화면·고정 7개 | 통과 |
+| Vercel /api/policy rewrite | 200 JSON, 시험 시작 version=0·커스텀0 |
+| Vercel Origin 포함 세션 요청 | 200; 세션 쿠키가 Vercel 주소에 저장됨 |
+| 쿠키 속성 | HttpOnly=true, Secure=true, SameSite=Lax |
+| CSRF 없는 변경 요청 | 403 CSRF_INVALID |
+| 정상 토큰 정책 변경·새로고침·원복 | 통과 |
+| 고유 커스텀 추가·차단·삭제 | 통과; 차단 업로드 422 EXTENSION_BLOCKED |
+| 허용 파일 화면 업로드·상태 조회 | 201 READY·조회200 |
+| 10MiB−1 / 정확히10MiB | 각 201 READY·상태 조회 성공 |
+| 10MiB+1 | 413 UPLOAD_SIZE_LIMIT |
+| 화면의 크기 초과 안내 | 통과 |
+
+**11개 검사 전부 PASS.** [실행](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812) · [영구 결과 JSON](evidence/public-deployment-2026-10-23.json) · [6개 항목 보고서](POST_DEPLOYMENT_CHECKS.md)
+
+이로써 실제 브라우저 경로의 출처·세션·쓰기 동작을 확인했다. 서버 .env를 직접 열어 현재 APP_ALLOWED_ORIGINS 문자열을 조회한 것은 아니므로 어떤 서버 명령이 언제 실행됐는지까지 추정하지 않는다. 데모 로그인은 loginAvailable=false였으며 로그인 성공 시험으로 확대하지 않는다.
+
+exe의 값은 원복했고 시험 커스텀은 삭제했다. 정책 버전과 감사 이력은 정상 변경 이력으로 남는다. 허용 시험 파일3개, 총 **20,971,548바이트**는 정상 저장됐으며 삭제 API가 없어 그대로 남겼다. 실제 파일 내용을 Git에 올리지 않았으며 요청 번호·파일 ID만 증거에 기록했다.
+
+컨테이너 재생성 영속성·DB/파일 백업·복원 시험은 이번 사용자 지정으로 제외했다. 서버 이미지 ID 확인과 실제 이전 버전 복귀는 수행하지 않았다. 기존 미설치 cron과 운영 정책 보류도 유지한다.

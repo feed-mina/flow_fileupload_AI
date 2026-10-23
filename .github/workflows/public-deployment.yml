@@ -1,0 +1,43 @@
+name: Public deployment verification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - frontend/**
+      - .github/workflows/public-deployment.yml
+  workflow_dispatch:
+    inputs:
+      write_tests:
+        description: 'Run authorized production writes (policy restored; upload fixtures remain)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: flow-public-deployment
+  cancel-in-progress: false
+jobs:
+  public:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+      - name: Install browser test dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Verify actual Vercel screen, session and upload path
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_CHANNEL: chrome
+          PUBLIC_BASE_URL: https://flow-fileupload-ai.vercel.app
+          PUBLIC_WRITE_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.write_tests == true && 'true' || 'false' }}
+        run: node e2e/public-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-deployment-evidence
+          path: test-results/public-deployment
+          retention-days: 14

@@ -1,3 +1,17 @@
+# PR #6 공개 배포 검증 추가 — 2026-10-23
+
+실제 Vercel 프로덕션 주소에서 Chromium 검사 **11개 전부 통과**. [실행39927104812](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812), 소스1f5d82fffef910f8e84a3838f8e01ecab9881f3d. 모킹 없는 공개 시험이며 [결과 JSON](evidence/public-deployment-2026-10-23.json)·[보고서](POST_DEPLOYMENT_CHECKS.md)에 근거를 남겼다.
+
+화면/정책 JSON, 출처 포함 세션, 쿠키 HttpOnly/Secure/Lax, CSRF 없는 변경403, 고정 선택 저장/새로고침/원복, 커스텀 추가/차단/삭제, GUI 업로드201·상태200, 10MiB−1/정확히10MiB 성공, 초과413, GUI 크기 초과 안내를 확인했다. Origin 설정 도구의 의미 있는 단위 시험4개도 로컬 및 Actions에서 통과했다.
+
+공개 시험 정책은 원복했으며 정상 업로드 시험 파일3개(20,971,548바이트)는 남아 있다. 컨테이너 재생성 영속성·백업·복원은 이번 사용자 요청으로 제외했다. 기존 CI의 격리 Java 프로세스 재시작 시험과 운영 컨테이너 영속성 시험을 혼동하지 않는다. 실제 서버 이미지 ID와 이전 버전 복귀는 미확인이다.
+
+PR #6 격리 회귀 [39927108028](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927108028)도 서버40·Node10·브라우저16·도구4개, Java 재시작, 실제 Traefik override Compose 검증을 통과했다. 공개 시험과 별도 결과다.
+
+아래 내용은 PR #1~5 당시의 환경과 실행 범위를 보존한 기록이다. 당시의 공개 배포 미실행 설명은 과거 시점이다.
+
+---
+
 # Hostinger·Vercel 준비 검증 — PR #5
 
 [실제 CI 실행 39914038649](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39914038649)에서 서버40개·Node10개·브라우저16개·별도 관리자 마이그레이션/최소 권한 재시작 T01~T04·두 Compose/Caddy 구성·Nginx 계약이 모두 통과했다. 실제 Hostinger/Vercel 공개 배포는 미실행이다.
