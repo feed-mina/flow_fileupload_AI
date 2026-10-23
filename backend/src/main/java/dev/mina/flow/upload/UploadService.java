@@ -42,7 +42,7 @@ public class UploadService {
     public UploadResult upload(String name, long declaredSize, InputStream input, UUID requestId) {
         // Read exactly one committed snapshot before validating/copying this file.
         PolicyView policy = policies.get();
-        dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_VALIDATING",policy.version(),null);
+        dev.mina.flow.operations.RequestLogFilter.result("UPLOAD_VALIDATING",policy.version(),declaredSize);
         if (find(requestId) != null) throw new UploadException(HttpStatus.CONFLICT, "UPLOAD_REQUEST_EXISTS",
                 "같은 요청 번호로 저장된 파일이 있습니다. 저장 결과를 조회해 주세요.", null, null);
         String extension = FilenameRules.extension(name, policy.version());

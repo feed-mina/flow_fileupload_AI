@@ -225,3 +225,16 @@ test('DEC 업로드: 선택된 EXE 차단 → 해제 후 저장 → 커스텀 �
   await page.reload();
   await expect(page.getByRole('list',{name:'커스텀 확장자 목록'}).getByRole('listitem')).toHaveCount(0);
 });
+
+test('실제 두 탭의 같은 버전 편집은 412 뒤 최신 규칙으로 맞춘다',async({page,context})=>{
+  await page.goto('/');const other=await context.newPage();await other.goto('/');
+  const a=page.getByRole('checkbox',{name:'js',exact:true}),b=other.getByRole('checkbox',{name:'js',exact:true});
+  await expect(a).toBeEnabled();await expect(b).toBeEnabled();
+  await other.getByLabel('추가할 확장자').fill('draft');const before=await a.isChecked();
+  await a.click();if(before)await expect(a).not.toBeChecked();else await expect(a).toBeChecked();await expect(a).toBeEnabled();
+  const collision=other.waitForResponse(response=>response.url().includes('/api/policy/fixed/js')&&response.status()===412);
+  await b.click();await collision;
+  await expect(other.getByRole('status')).toContainText('최신 규칙을 불러왔습니다');
+  await expect(other.getByLabel('추가할 확장자')).toHaveValue('draft');
+  if(before)await expect(b).not.toBeChecked();else await expect(b).toBeChecked();await other.close();
+});
