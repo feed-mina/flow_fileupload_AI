@@ -1,29 +1,50 @@
 services:
   db:
-    image: postgres:17.6-alpine
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-flow_policy}
-      POSTGRES_USER: ${POSTGRES_USER:-flow}
+      POSTGRES_USER: ${POSTGRES_USER:-flow_admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set a distinct APP_DB_PASSWORD in .env}
     volumes:
       - policy_data:/var/lib/postgresql/data
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 3s
       timeout: 3s
       retries: 20
+  migrate:
+    build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
+    environment:
+      MIGRATE_ONLY: 'true'
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
+      DB_USER: ${POSTGRES_USER:-flow_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
   backend:
     build: ./backend
+    image: flow-policy-backend:${APP_VERSION:-local}
     environment:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
-      DB_USER: ${POSTGRES_USER:-flow}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      DB_USER: flow_app
+      DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
+      SPRING_FLYWAY_ENABLED: 'false'
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_COOKIE_SAME_SITE: ${SESSION_COOKIE_SAME_SITE:-lax}
+      DEMO_AUTH_USER: ${DEMO_AUTH_USER:-}
+      DEMO_AUTH_PASSWORD: ${DEMO_AUTH_PASSWORD:-}
       UPLOAD_ROOT: /app/uploads
     volumes:
       - upload_data:/app/uploads
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
   frontend:
     build: ./frontend
     ports:

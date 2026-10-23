@@ -11,6 +11,8 @@ export function usePolicy() {
   const [mustRefresh, setMustRefresh] = useState(false);
   const activeRead = useRef(null);
   const writing = useRef(false);
+  const lastSynced = useRef(0);
+  const [syncedAt,setSyncedAt] = useState(0);
 
   const refresh = useCallback(async () => {
     activeRead.current?.abort();
@@ -24,6 +26,7 @@ export function usePolicy() {
       const next = await getPolicy(controller.signal);
       if (!controller.signal.aborted) {
         setPolicy(next);
+        lastSynced.current=Date.now(); setSyncedAt(lastSynced.current);
         setMustRefresh(false);
       }
     } catch (failure) {
@@ -40,6 +43,15 @@ export function usePolicy() {
     refresh();
     return () => activeRead.current?.abort();
   }, [refresh]);
+
+  useEffect(() => {
+    const check = () => {
+      if (document.visibilityState !== 'hidden' && !writing.current && Date.now()-lastSynced.current >= 60000) refresh();
+    };
+    const timer=setInterval(check,60000);
+    window.addEventListener('focus',check);document.addEventListener('visibilitychange',check);
+    return () => {clearInterval(timer);window.removeEventListener('focus',check);document.removeEventListener('visibilitychange',check);};
+  },[refresh]);
 
   const mutate = async (key, action) => {
     if (!policy || loading || mustRefresh || writing.current) return false;
@@ -58,6 +70,7 @@ export function usePolicy() {
       const conflict = failure.status === 412 || failure.status === 428;
       if (key === 'custom') setFieldError(failure.message || '입력값을 유지했습니다. 연결을 확인하고 다시 시도해 주세요.');
       setMustRefresh(uncertain || conflict);
+      if(conflict) { await refresh(); setNotice('다른 화면에서 규칙이 바뀌어 최신 규칙을 불러왔습니다. 입력을 검토한 뒤 다시 저장해 주세요.'); }
       setError(uncertain
         ? '저장 결과를 확인하지 못했습니다. 최신 규칙을 다시 조회해 주세요.'
         : failure.message);
@@ -69,7 +82,7 @@ export function usePolicy() {
   };
 
   return {
-    policy, loading, pending, error, fieldError, notice, mustRefresh, refresh,
+    policy, loading, pending, error, fieldError, notice, mustRefresh, refresh, syncedAt,
     updateFixed: (extension, enabled) => mutate(extension, (version) => setFixed(extension, enabled, version)),
     createCustom: (extension) => mutate('custom', (version) => addCustom(extension, version)),
     removeCustom: (id) => mutate(`delete-${id}`, (version) => deleteCustom(id, version)),

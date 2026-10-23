@@ -58,7 +58,10 @@ async function get() {
   return response.json();
 }
 async function write(path, method, body, version, expected = 200) {
-  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', 'If-Match': `"${version}"` }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
+  const security = await fetch(base.replace('/api/policy','/api/session'));
+  const session = await security.json();
+  const cookie = security.headers.get('set-cookie').split(';',1)[0];
+  const response = await fetch(base + path, { method, headers: { 'Cookie': cookie, 'X-CSRF-TOKEN': session.csrfToken, 'Content-Type': 'application/json', 'If-Match': `"${version}"` }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
   assert.equal(response.status, expected, await response.clone().text());
   return response.json();
 }

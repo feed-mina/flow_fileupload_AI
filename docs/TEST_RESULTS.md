@@ -1,3 +1,39 @@
+# Hostinger·Vercel 준비 검증 — PR #5
+
+[실제 CI 실행 39914038649](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39914038649)에서 서버40개·Node10개·브라우저16개·별도 관리자 마이그레이션/최소 권한 재시작 T01~T04·두 Compose/Caddy 구성·Nginx 계약이 모두 통과했다. 실제 Hostinger/Vercel 공개 배포는 미실행이다.
+
+| 검증 | 실제 결과 | 범위 |
+|---|---|---|
+| 서버 | 40개 통과, 실패/오류/skip 0 | 실제 PostgreSQL·최소 권한·CSRF·저장/정리·구조화 로그·내용 진단 |
+| Node API | 10개 통과 | CSRF 핸드셰이크와 요청/오류/재전송 금지 회귀 |
+| 브라우저 | 16개 통과, retry 0 | 정책/업로드 실서버 경로4개·모킹 경로12개; 두 탭·60초·사전 안내·초기화·429·모바일 |
+| 재시작/마이그레이션 | T01~T04 통과 | 별도 관리자 migrator 뒤 flow_app으로 두 실제 Java 프로세스 실행 |
+| 배포 구성 | 두 Compose 구성·Caddy validate·별도 실제 Nginx 413 통과 | 전체 Hostinger 앱 이미지 빌드/기동·공개 HTTPS 배포는 미실행 |
+| 내용 진단 | PDF/PNG/GIF 일치/불일치·정책 이름207개·등록 이름1284개 | 등록 이름을 PNG 내용으로 변경: MATCH 1·MISMATCH 1206·UNVERIFIABLE 77. 모든 형식의 양성 fixture/내부 유효성 검증은 아님 |
+
+**DB 실측:** 통계 갱신·예열20회 후 각 크기에서 읽기200회, 동시 쓰기4개/총40회. 읽기는 서비스 조회, 쓰기는 부모 잠금·변경·버전·감사 DB 트랜잭션이다. 격리 CI 환경이며 HTTP/네트워크/Hostinger 실서비스 지연은 포함하지 않는다. p95는 측정값95%가 그 시간 이내였다는 뜻이다.
+
+| 커스텀 개수 | 읽기 p50 / p95 / p99(ms) | 쓰기 p50 / p95 / p99(ms) | 읽기 / 쓰기 초당 처리량 |
+|---:|---:|---:|---:|
+| 0 | 1.830 / 3.640 / 4.495 | 7.538 / 16.185 / 27.915 | 436.0 / 412.4 |
+| 50 | 1.681 / 2.081 / 2.262 | 6.918 / 10.090 / 16.423 | 577.5 / 521.7 |
+| 200 | 1.574 / 1.808 / 1.926 | 6.093 / 7.684 / 8.557 | 629.3 / 626.4 |
+
+실제 계획은 세 크기 모두 Seq Scan과 정렬을 선택했다. 7~207행의 작은 데이터에서 이를 인덱스 장애로 해석하지 않는다. UNIQUE(policy_id, extension)는 중복 제약으로 유지하고 이번 측정만으로 추가 인덱스를 만들지 않았다.
+
+**모바일 실측:** 390×844 화면·20자 이름200개, API 모킹. 3회 지연 1465 / 944 / 934ms, p95(3회 소표본에서는 최댓값) 1465ms. 가로폭 390/390px, 삭제 버튼44px 이상·삭제 후199개를 확인했다. 실기기/API 지연/프레임률 측정은 아니다.
+
+[실행 로그](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39914038649)의 policy-test-evidence에 db-performance.json, content-extension-matrix.json, mobile-200-performance.json·모바일 캡처·JUnit/브라우저/재시작 증거를 보관한다. 재실행 시 수치는 달라질 수 있다.
+
+
+이 시험은 공개 Hostinger/Vercel 서비스의 지연이나 실제 HTTPS/CORS/쿠키 전달을 검증한 것이 아닙니다. 권한 시험은 격리된 PostgreSQL과 별도 앱/관리 연결에서 수행합니다. 재시작 시험은 별도 migrator로 스키마를 만든 뒤 flow_app 계정과 Flyway 비활성으로 두 실제 Java 프로세스를 실행합니다.
+
+내용 진단은 Apache Tika test 의존성으로 MIME/시그니처를 비교합니다. 유효한 파일 구조 전체·악성코드 부재를 보장하지 않고 운영 업로드 차단을 추가하지 않았습니다. 모바일 시험의 API 응답은 모킹합니다. 실제 두 탭 충돌·기존 정책/업로드 흐름은 실제 서버 경로로 시험합니다. 강제 종료 시험은 자식 Java 파일 쓰기 fixture를 실제 종료하고 새 UploadStorage에서 만료 잔여물 정리를 확인합니다.
+
+초기 CI에서 multipart 요청 builder에 CSRF 처리기를 먼저 붙여 구체 타입이 사라지는 컴파일 문제와 tag@digest 문자열의 Testcontainers 호환 판정 문제를 발견했습니다. 요청 builder의 구체 타입을 유지하고 공식 PostgreSQL digest-only 참조로 고쳤습니다. 시험을 생략하거나 CSRF 검사를 끄지 않았습니다. 이후 정상 실행의 근거는 위 새 CI 링크를 따릅니다.
+
+아래 기록은 PR1~3의 과거 실행입니다.
+
 # UX·예외 후속 구현 검증
 
 로컬 Node API 10개 PASS. 첫 UX 구현 커밋 `f605e640965336730ef6c744577a5610622f55c0`의 [실제 CI](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902350802)는 서버 30개·Node 10개·브라우저 11개·실제 재시작 T01~T04·실제 Nginx 413·설치/빌드/Compose config 모두 PASS. 서버 skip 0, 브라우저 retry 0. 이후 정리한 최종 커밋의 판정과 실행 URL은 [PR #3 본문](https://github.com/feed-mina/flow_fileupload_AI/pull/3)·[Checks](https://github.com/feed-mina/flow_fileupload_AI/pull/3/checks)를 따른다. 상세 구성·실행 범위는 [UX_IMPLEMENTATION](UX_IMPLEMENTATION.md)을 참조한다. 아래 PR2/PR1 기록은 과거 실행이며 새 커밋 통과 판정이 아니다.

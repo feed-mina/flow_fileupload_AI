@@ -11,13 +11,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class UploadStorage {
     private final Path root;
+    private final java.util.Set<Path> active = java.util.concurrent.ConcurrentHashMap.newKeySet();
     public UploadStorage(@Value("${app.upload-root:./uploads}") String configuredRoot) throws IOException {
         Path configured = Path.of(configuredRoot).toAbsolutePath().normalize();
         if (Files.isSymbolicLink(configured)) throw new IOException("Upload root must not be a symbolic link");
         Files.createDirectories(configured);
         this.root = configured.toRealPath();
     }
-    public Path temporary() throws IOException { return Files.createTempFile(root, "pending-", ".tmp"); }
+    public Path temporary() throws IOException {
+        Path path=Files.createTempFile(root,"pending-",".tmp"); active.add(path); return path;
+    }
+    public int removeExpiredTemporary(java.time.Duration age,int limit) throws IOException {
+        if(age.isZero()||age.isNegative()||limit<1)throw new IllegalArgumentException("Invalid cleanup limits");
+        java.time.Instant cutoff=java.time.Instant.now().minus(age); int removed=0;
+        try(var paths=Files.newDirectoryStream(root,"pending-*.tmp")) {
+            for(Path path:paths) {
+                if(removed>=limit)break;
+                if(active.contains(path)||!Files.isRegularFile(path,LinkOption.NOFOLLOW_LINKS))continue;
+                if(Files.getLastModifiedTime(path,LinkOption.NOFOLLOW_LINKS).toInstant().isBefore(cutoff)&&Files.deleteIfExists(path))removed++;
+            }
+        }
+        return removed;
+    }
     public Path destination(UUID id) {
         Path target = root.resolve(id + ".bin").normalize();
         if (!target.getParent().equals(root)) throw new IllegalStateException("Invalid storage key");
@@ -40,6 +55,6 @@ public class UploadStorage {
         try { Files.move(temporary, destination, StandardCopyOption.ATOMIC_MOVE); }
         catch (AtomicMoveNotSupportedException unsupported) { Files.move(temporary, destination); }
     }
-    public void remove(Path path) throws IOException { Files.deleteIfExists(path); }
+    public void remove(Path path) throws IOException { try { Files.deleteIfExists(path); } finally { active.remove(path); } }
     public static class FileTooLargeException extends IOException {}
 }

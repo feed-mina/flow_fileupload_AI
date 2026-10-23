@@ -1,3 +1,4 @@
+const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/$/, '');
 export class ApiError extends Error {
   constructor(message, code, status, details) {
     super(message);
@@ -9,13 +10,17 @@ export class ApiError extends Error {
 }
 
 async function request(path, options = {}, valid = (body) => body && Array.isArray(body.fixed) && Array.isArray(body.custom) && Number.isSafeInteger(body.version)) {
+  if (options.method && !['GET','HEAD','OPTIONS'].includes(options.method)) {
+    const session = await request('/api/session', {}, value => typeof value?.csrfToken === 'string');
+    options = { ...options, headers: { ...options.headers, 'X-CSRF-TOKEN': session.csrfToken } };
+  }
   const controller = new AbortController();
   const abort = () => controller.abort();
   options.signal?.addEventListener('abort', abort, { once: true });
   if (options.signal?.aborted) controller.abort();
   const timeout = setTimeout(abort, 15000);
   try {
-    const response = await fetch(path, { ...options, signal: controller.signal, cache: 'no-store' });
+    const response = await fetch(API_BASE + path, { ...options, signal: controller.signal, cache: 'no-store', credentials: 'include' });
     const body = await response.json().catch(() => null);
     if (!response.ok) {
       const sizeLimit = response.status === 413;
@@ -68,3 +73,7 @@ export const uploadFile = (file, requestId = crypto.randomUUID()) => {
   return request('/api/uploads', { method: 'POST', body, headers: { 'X-Upload-Request-Id': requestId } },
     (value) => readyUpload(value, requestId));
 };
+
+export const getSession = () => request('/api/session', {}, value => typeof value?.csrfToken === 'string');
+export const login = (username,password) => request('/api/session/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username,password})}, () => true);
+export const logout = () => request('/api/session/logout', {method:'POST'}, () => true);

@@ -1,0 +1,9 @@
+{$API_HOST} {
+    request_body {
+        max_size 12582912
+    }
+    reverse_proxy backend:8080 {
+        # Overwrite, never trust the browser's claimed forwarding address.
+        header_up X-Forwarded-For {remote_host}
+    }
+}
