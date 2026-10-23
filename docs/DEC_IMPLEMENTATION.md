@@ -35,6 +35,8 @@
 
 브라우저 쓰기 요청의 Origin이 같은 출처와 다르거나 Sec-Fetch-Site가 cross-site이면 403이다. 프록시는 원래 Host를 전달한다. Origin 없는 직접 API 요청은 허용하므로 이 필터는 인증·인가를 대체하지 않는다. 쿠키 인증은 아직 사용하지 않는다.
 
+개발 프록시도 `changeOrigin: false`를 명시해 브라우저 Origin과 Host를 일치시킨다. Vite의 문자열 프록시 축약 설정은 Host를 대상 서버로 바꾸므로 같은 출처 검사와 충돌한다. 운영 Nginx는 `proxy_set_header Host $http_host`를 사용한다.
+
 ## 저장·오류 흐름
 
 ```mermaid

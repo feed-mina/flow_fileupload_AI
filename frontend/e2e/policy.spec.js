@@ -6,6 +6,14 @@ const initial = {
   custom: [], customCount: 0, maxCount: 200, maxLength: 20,
 };
 
+test.beforeEach(async ({ page }) => {
+  page.on('response', async (response) => {
+    if (response.url().includes('/api/') && response.status() >= 400) {
+      console.log(`API failure ${response.status()} ${new URL(response.url()).pathname}: ${await response.text().catch(() => 'unreadable')}`);
+    }
+  });
+});
+
 test('T01 → T02 → T04: 실제 서버와 DB로 초기 상태·선택 저장·커스텀 추가 확인', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('checkbox')).toHaveCount(7);
