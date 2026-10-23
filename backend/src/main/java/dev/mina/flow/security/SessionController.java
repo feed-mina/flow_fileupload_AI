@@ -37,12 +37,12 @@ public class SessionController {
     }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Credentials input, HttpServletRequest request, HttpServletResponse response) {
-        if (!available) return ResponseEntity.status(503).body(Map.of("error",Map.of("code","LOGIN_NOT_CONFIGURED","message","로그인 계정이 설정되지 않았습니다.")));
+        if (!available) return ResponseEntity.status(503).header("Cache-Control","no-store").body(Map.of("error",Map.of("code","LOGIN_NOT_CONFIGURED","message","로그인 계정이 설정되지 않았습니다.")));
         boolean valid=false;
         try { valid=input.username()!=null && input.password()!=null && input.password().length()<=200
             && encoder.matches(input.password(),users.loadUserByUsername(input.username()).getPassword()); }
         catch (org.springframework.security.core.userdetails.UsernameNotFoundException ignored) { encoder.matches("invalid",encoder.encode("dummy-password")); }
-        if (!valid) return ResponseEntity.status(401).body(Map.of("error",Map.of("code","LOGIN_FAILED","message","아이디와 비밀번호를 확인해 주세요.")));
+        if (!valid) return ResponseEntity.status(401).header("Cache-Control","no-store").body(Map.of("error",Map.of("code","LOGIN_FAILED","message","아이디와 비밀번호를 확인해 주세요.")));
         request.getSession(true); request.changeSessionId();
         var auth=UsernamePasswordAuthenticationToken.authenticated(input.username(),null,List.of(new SimpleGrantedAuthority("ROLE_DEMO")));
         var context=SecurityContextHolder.createEmptyContext(); context.setAuthentication(auth);

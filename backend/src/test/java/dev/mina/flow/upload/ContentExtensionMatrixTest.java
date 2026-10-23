@@ -35,8 +35,20 @@ class ContentExtensionMatrixTest {
         // Cover the maximum policy cardinality: fixed seven + two hundred custom names.
         var policyExtensions=new ArrayList<>(List.of("bat","cmd","com","cpl","exe","scr","js"));
         for(int i=0;i<200;i++)policyExtensions.add("custom"+i);
-        for(String extension:policyExtensions){String result=compare(extension,fixtures.get("png"));assertThat(result).isIn("MISMATCH","UNVERIFIABLE");}
-        var report=Map.of("engine","Apache Tika core 3.2.3 (test dependency)","matchedAndMismatched",evidence,"policyNamesChecked",policyExtensions.size(),"unknownResult","UNVERIFIABLE","scope","diagnostic only; arbitrary extension/contents cannot be proven; not antivirus; upload gate unchanged");
-        Files.createDirectories(Path.of("test-results"));String json=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(report);Files.writeString(Path.of("test-results/content-extension-matrix.json"),json);System.out.println("CONTENT_MATRIX "+json);
+        var policyRows=new ArrayList<Map<String,String>>();
+        for(String extension:policyExtensions){String result=compare(extension,fixtures.get("png"));assertThat(result).isIn("MISMATCH","UNVERIFIABLE");policyRows.add(Map.of("extension",extension,"result",result));}
+        // Exhaust every registered spelling accepted by our single-suffix ASCII policy grammar.
+        // A PNG renamed to each spelling gives a mismatch/alias/unknown matrix, not proof of every format's internals.
+        var registry=MimeTypes.getDefaultMimeTypes();var names=new TreeSet<String>();
+        for(var media:registry.getMediaTypeRegistry().getTypes())for(String suffix:registry.forName(media.toString()).getExtensions()){
+            String name=suffix.startsWith(".")?suffix.substring(1):suffix;
+            if(name.matches("[A-Za-z0-9]{1,20}"))names.add(name.toLowerCase(java.util.Locale.ROOT));
+        }
+        var registryRows=new ArrayList<Map<String,String>>();var counts=new TreeMap<String,Integer>();
+        for(String name:names){String result=compare(name,fixtures.get("png"));registryRows.add(Map.of("extension",name,"actualMime","image/png","result",result));counts.merge(result,1,Integer::sum);}
+        assertThat(names).contains("pdf","png","gif");
+        var report=new LinkedHashMap<String,Object>();report.put("engine","Apache Tika core 3.2.3 (test dependency)");report.put("matchedAndMismatched",evidence);report.put("policyNamesChecked",policyExtensions.size());report.put("policyRows",policyRows);report.put("registryNamesChecked",names.size());report.put("registryOutcomeCounts",counts);report.put("registryRows",registryRows);report.put("unknownResult","UNVERIFIABLE");report.put("scope","diagnostic only; three positive fixtures; registered single ASCII suffixes renamed from PNG; arbitrary extension/contents cannot be proven; not antivirus; upload gate unchanged");
+        Files.createDirectories(Path.of("test-results"));String json=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(report);Files.writeString(Path.of("test-results/content-extension-matrix.json"),json);
+        System.out.println("CONTENT_MATRIX "+new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("positiveFormats",List.of("pdf","png","gif"),"policyNamesChecked",policyExtensions.size(),"registryNamesChecked",names.size(),"registryOutcomeCounts",counts,"unknownResult","UNVERIFIABLE","scope",report.get("scope"))));
     }
 }
