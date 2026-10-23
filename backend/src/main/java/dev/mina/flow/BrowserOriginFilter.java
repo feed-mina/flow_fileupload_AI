@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,7 +20,8 @@ public class BrowserOriginFilter extends OncePerRequestFilter {
             if ((origin != null && !origin.equals(expected)) || "cross-site".equals(request.getHeader("Sec-Fetch-Site"))) {
                 response.setStatus(403);
                 response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"error\":{\"code\":\"ORIGIN_NOT_ALLOWED\",\"message\":\"같은 출처의 화면에서 요청해 주세요.\"}}");
+                response.setHeader("Cache-Control", "no-store");
+                response.getWriter().write("{\"error\":{\"code\":\"ORIGIN_NOT_ALLOWED\",\"message\":\"같은 출처의 화면에서 요청해 주세요.\",\"requestId\":\"" + UUID.randomUUID() + "\"}}");
                 return;
             }
         }

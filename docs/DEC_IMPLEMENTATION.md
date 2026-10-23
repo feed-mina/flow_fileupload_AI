@@ -72,4 +72,6 @@ DB와 디스크는 분산 트랜잭션이 아니다. `TransactionTemplate.execut
 - 정책 DB 실패 시 파일 생성 전 중단, 실제 읽은 바이트 초과 방지.
 - 브라우저 EXE 차단 → 선택 해제 → 업로드 성공 → 커스텀 삭제·새로고침 유지.
 
-현재 새 시험 결과는 CI 실행 전이다. 실제 결과는 PR의 Actions와 TEST_RESULTS를 따른다. 실제 Docker 빌드·기동, 공개 사이트 시험, 강제 종료 복구·자동 보관 정책은 별도로 구분한다.
+실행된 검사·수정 이력은 TEST_RESULTS를, 최종 커밋의 실행 URL과 판정은 PR #2 본문·Checks를 따른다. 실제 Docker 빌드·기동, 공개 사이트 시험, 강제 종료 복구·자동 보관 정책은 별도로 구분한다.
+
+크기 초과 응답의 연결 끊김은 Tomcat의 유한한 `max-swallow-size: 12MB` 설정으로 보완했다. 무제한 소비는 허용하지 않는다. 참고: [Tomcat HTTP Connector](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html), [Spring Boot 3.5 속성](https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html). Vite Host 변경은 [공식 프록시 소스](https://github.com/vitejs/vite/blob/v8.3.5/packages/vite/src/node/server/middlewares/proxy.ts)의 문자열 축약 동작을 확인해 수정했다.

@@ -12,7 +12,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.TransactionException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -28,7 +28,7 @@ public class ApiExceptionHandler {
         return failure(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "요청 내용을 확인해 주세요.");
     }
 
-    @ExceptionHandler({DataAccessException.class, CannotCreateTransactionException.class})
+    @ExceptionHandler({DataAccessException.class, TransactionException.class})
     ResponseEntity<Failure> database(Exception exception) {
         String requestId = UUID.randomUUID().toString();
         log.error("Policy database request failed; requestId={}", requestId, exception);

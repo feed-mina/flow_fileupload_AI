@@ -116,6 +116,7 @@ class UploadApiTest {
             var response = rest.postForEntity("/api/uploads",new HttpEntity<>(parts,headers),String.class);
             System.out.println("HTTP file boundary status=" + response.getStatusCode().value());
             assertThat(response.getStatusCode().value()).isEqualTo(size > 10485760 ? 413 : 201);
+            if (size > 10485760) assertThat(response.getBody()).contains("UPLOAD_SIZE_LIMIT");
         }
     }
     @Test void moveFailureRollsBackAndCleansStaging() throws Exception {
@@ -143,7 +144,8 @@ class UploadApiTest {
     }
     @Test void crossOriginBrowserWriteIsRejected() throws Exception {
         mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{1})).header("Origin","https://untrusted.invalid"))
-                .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("ORIGIN_NOT_ALLOWED"));
+                .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("ORIGIN_NOT_ALLOWED"))
+                .andExpect(jsonPath("error.requestId").isNotEmpty());
         emptyStorage();
     }
 }

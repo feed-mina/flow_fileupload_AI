@@ -3,9 +3,20 @@
 ## DEC 후속 검증 — PR #2
 
 - 로컬: Node API 6개 PASS. 삭제 요청·multipart 헤더·READY 판정 포함.
-- 새 서버 통합·파일 장애·경합·HTTP 크기 경계 및 브라우저 시험: CI 실행 중. 기존 PR #1 통과 결과와 혼동하지 않는다.
+- 서버 통합·파일 장애·경합·HTTP 크기 경계: 두 번째 CI에서 24개 PASS, skip 0. 기존 T01~T04 실제 재시작과 프론트 빌드도 PASS.
+- 두 번째 CI 브라우저 기록: 3/5 PASS, 실제 서버 경로 2개 실패. Vite 문자열 프록시가 Host를 변경해 정상 Origin 요청이 거부되는 원인을 확인하고 객체 설정의 `changeOrigin: false`로 수정. 보안 검사를 비활성화하지 않음.
 - 실제 Docker 이미지 빌드·Compose 기동·공개 배포·컨테이너 재생성: 미실행.
 - 실행: https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39896452446
+
+첫 실행의 실제 HTTP 크기 경계 시험은 초과 파일의 JSON 413 대신 연결 끊김으로 실패했다. Tomcat의 중단 업로드 소비 한도를 무제한으로 풀지 않고 12 MiB로 조정한 뒤, 두 번째 실행에서 10 MiB-1·정확히·+1바이트의 201·201·413을 확인했다.
+
+두 번째 실행: https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39896632010 . 기대한 장애 주입의 ERROR 로그는 503·롤백·파일 정리가 통과했는지와 함께 해석한다. 모든 ERROR 로그를 새로운 장애로 세지 않는다.
+
+위 두 실행은 수정 과정의 이력이다. **최종 커밋의 실행 URL·판정·시험 수는 [PR #2 본문](https://github.com/feed-mina/flow_fileupload_AI/pull/2)과 [Checks](https://github.com/feed-mina/flow_fileupload_AI/pull/2/checks)를 따른다.** 새 실행을 이전 실패 기록과 혼동하지 않는다.
+
+현재 시험 구성: 서버 24개(정책 8, 업로드 서비스 2, 업로드 API·파일·HTTP 경계 14), Node API 6개, Chromium 5개, 별도의 실제 두 JVM 재시작 T01~T04. HTTP 초과 응답에는 413뿐 아니라 `UPLOAD_SIZE_LIMIT` JSON 코드도 확인한다. Origin 거부 응답은 requestId와 no-store를 포함하며, DB 접근·트랜잭션 실패는 503으로 분류한다.
+
+실행 위치·명령: 저장소 루트 `mvn -B -ntp -f backend/pom.xml verify`, `node scripts/verify-restart.mjs`; frontend에서 `npm test`, `npm run build`, `npm run test:e2e`. DB·경로는 격리된 CI/Testcontainers 환경이며 실제 사용자 파일은 사용하지 않는다. 아티팩트 `policy-test-evidence`의 JUnit·재시작 JSON/로그·브라우저 보고서를 함께 확인한다.
 
 아래는 PR #1의 기존 기록이다.
 
