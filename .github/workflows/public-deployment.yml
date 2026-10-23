@@ -1,11 +1,9 @@
 name: Public deployment verification
 on:
-  # This task branch is explicitly authorized to run the production write scenarios.
-  # Other branches do not trigger production writes.
-  push:
-    branches: [feat/public-deployment-checks]
+  pull_request:
+    branches: [main]
     paths:
-      - frontend/e2e/public-smoke.mjs
+      - frontend/**
       - .github/workflows/public-deployment.yml
   workflow_dispatch:
     inputs:
@@ -35,7 +33,7 @@ jobs:
         env:
           PLAYWRIGHT_CHANNEL: chrome
           PUBLIC_BASE_URL: https://flow-fileupload-ai.vercel.app
-          PUBLIC_WRITE_TEST: ${{ (github.event_name == 'push' || inputs.write_tests == true) && 'true' || 'false' }}
+          PUBLIC_WRITE_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.write_tests == true && 'true' || 'false' }}
         run: node e2e/public-smoke.mjs
       - uses: actions/upload-artifact@v4
         if: always()

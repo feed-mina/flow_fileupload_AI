@@ -4,19 +4,32 @@
 
 React 19 + Ant Design 6 화면이 Spring Boot 3.5 / Java 17의 JSON API를 호출합니다. PostgreSQL 17에 정책을 보관하고 Flyway로 최초 데이터를 한 번 생성합니다. Docker Compose로 화면·서버·DB를 실행하며 GitHub PR과 Actions에 변경 및 시험 근거를 남깁니다.
 
-PR #1의 T01~T04에 이어 실제 업로드 차단·저장과 커스텀 삭제를 구현했습니다. [채택한 DEC와 구현 계약](docs/DEC_IMPLEMENTATION.md)을 기준으로 합니다. 인증·사용자별 격리, 보관 기간·전체 저장 한도가 아직 결정되지 않아 로컬 구성만 제공하며 공개 배포는 이번 범위에 포함하지 않습니다.
+PR #1의 T01~T04에 이어 실제 업로드 차단·저장과 커스텀 삭제를 구현했습니다. [채택한 DEC와 구현 계약](docs/DEC_IMPLEMENTATION.md)을 기준으로 합니다. Hostinger VPS에 서버·PostgreSQL을, Vercel에 React 화면을 배포했습니다. 모든 방문자가 공유 정책을 편집하는 데모이며, 사용자별 격리·편집 인가·정상 파일 보관/총량 정책은 기존 결정대로 구현하지 않았습니다.
 
-## 실행
+## 공개 서비스와 검증 결과
+
+- [Vercel 공개 화면](https://flow-fileupload-ai.vercel.app/)
+- [Vercel 경유 정책 JSON](https://flow-fileupload-ai.vercel.app/api/policy)
+- [Hostinger 화면·서버 진입점](https://flow.srv1869569.hstgr.cloud/)
+- [실제 배포 기록](docs/DEPLOYMENT_PROGRESS_2026-10-23.md) · [배포 후 점검 보고서](docs/POST_DEPLOYMENT_CHECKS.md) · [제출 점검표](docs/SUBMISSION_CHECKLIST.md)
+
+2026-10-23 17:47 한국 시간, 실제 공개 Chromium 브라우저 시험 **11개가 통과**했습니다. 화면·정책 저장/원복·커스텀 추가/삭제·쿠키/CSRF·허용/차단 업로드·상태 재조회·10MiB 경계를 확인했습니다. [실행 근거](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812) · [결과 JSON](docs/evidence/public-deployment-2026-10-23.json)
+
+현재 연결은 **브라우저 → Vercel 상대 경로 /api → 외부 rewrite → Hostinger의 기존 Traefik HTTPS → Nginx → Spring Boot → PostgreSQL/업로드 볼륨**입니다. Vercel에는 DB 암호를 넣지 않습니다. Caddy 구성은 배포 전 계획 예시이며 실제 적용 구성은 [compose.vps-live.yml](compose.vps-live.yml)입니다.
+
+세션 쿠키는 실제 시험에서 HttpOnly·Secure·SameSite=Lax를 확인했습니다. 데모 로그인은 설정하지 않아 로그인 화면을 제공하지 않으며, CSRF 방어가 있어도 정책 편집 권한이나 방문자별 격리가 생기는 것은 아닙니다. 컨테이너 재생성 영속성·백업·복원 시험은 이번 사용자 요청에서 제외했습니다.
+
+## 로컬 실행
 
 Docker 엔진이 실행 중인 환경에서 저장소 루트에서 진행합니다.
 
 ```sh
 cp .env.example .env
-# .env의 POSTGRES_PASSWORD를 로컬용 값으로 변경
+# POSTGRES_PASSWORD와 APP_DB_PASSWORD를 서로 다른 로컬용 값으로 변경
 docker compose up --build -d
 ```
 
-브라우저에서 http://localhost:8080 을 엽니다. 포트는 `.env`의 `APP_PORT`로 변경합니다. DB와 서버 포트는 외부에 공개하지 않으며 화면 포트도 127.0.0.1에만 연결합니다. 인증이 없는 로컬 과제용 구성입니다.
+브라우저에서 http://localhost:8080 을 엽니다. 포트는 `.env`의 `APP_PORT`로 변경합니다. DB와 서버 포트는 외부에 공개하지 않으며 화면 포트도 127.0.0.1에만 연결합니다. 로컬 기본값은 데모 로그인을 설정하지 않으며 세션·CSRF 방어를 사용합니다.
 
 ```sh
 docker compose logs backend

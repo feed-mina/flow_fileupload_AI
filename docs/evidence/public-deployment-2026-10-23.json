@@ -1,0 +1,162 @@
+{
+  "sourceCommit": "1f5d82fffef910f8e84a3838f8e01ecab9881f3d",
+  "run": "https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812",
+  "artifact": "https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39927104812/artifacts/12489342982",
+  "startedAt": "2026-10-23T08:47:23.927Z",
+  "base": "https://flow-fileupload-ai.vercel.app",
+  "writes": true,
+  "excluded": [
+    "container recreation",
+    "backup",
+    "restore"
+  ],
+  "checks": [
+    {
+      "name": "01 public HTML and React screen",
+      "result": "PASS",
+      "details": {
+        "httpStatus": 200,
+        "fixedCheckboxes": 7
+      }
+    },
+    {
+      "name": "02 Vercel rewrite policy JSON",
+      "result": "PASS",
+      "details": {
+        "version": 0,
+        "fixed": 7,
+        "customCount": 0
+      }
+    },
+    {
+      "name": "03 production Origin and session cookie",
+      "result": "PASS",
+      "details": {
+        "authenticated": false,
+        "loginAvailable": false,
+        "httpOnly": true,
+        "secure": true,
+        "sameSite": "Lax"
+      }
+    },
+    {
+      "name": "04 missing CSRF is rejected",
+      "result": "PASS",
+      "details": {
+        "status": 403,
+        "code": "CSRF_INVALID"
+      }
+    },
+    {
+      "name": "05 fixed save, reload and restore",
+      "result": "PASS",
+      "details": {
+        "savedAndReloaded": true,
+        "restored": true
+      }
+    },
+    {
+      "name": "06 custom add, blocked upload and delete",
+      "result": "PASS",
+      "details": {
+        "added": true,
+        "blockedStatus": 422,
+        "deleted": true
+      }
+    },
+    {
+      "name": "07 GUI allowed upload and status lookup",
+      "result": "PASS",
+      "details": {
+        "status": 201,
+        "statusLookup": 200
+      }
+    },
+    {
+      "name": "08 below limit",
+      "result": "PASS",
+      "details": {
+        "sizeBytes": 10485759,
+        "status": 201
+      }
+    },
+    {
+      "name": "09 exact limit",
+      "result": "PASS",
+      "details": {
+        "sizeBytes": 10485760,
+        "status": 201
+      }
+    },
+    {
+      "name": "10 over limit",
+      "result": "PASS",
+      "details": {
+        "sizeBytes": 10485761,
+        "status": 413,
+        "code": "UPLOAD_SIZE_LIMIT"
+      }
+    },
+    {
+      "name": "11 GUI oversized file message",
+      "result": "PASS",
+      "details": {
+        "clientSizeMessage": true
+      }
+    }
+  ],
+  "uploads": [
+    {
+      "requestId": "61fab7e1-7fae-4337-8c88-0e911231e907",
+      "sizeBytes": 64,
+      "extension": "qa83ec7283a951",
+      "outcome": "rejected",
+      "httpStatus": 422,
+      "code": "EXTENSION_BLOCKED"
+    },
+    {
+      "requestId": "30d24c37-dafe-4a7c-ad16-d61b5f957e14",
+      "id": "4c4279b8-0ef9-49dc-ba78-c11b8d779a97",
+      "sizeBytes": 29,
+      "outcome": "READY"
+    },
+    {
+      "requestId": "4895f48e-3b54-43a9-846a-ea80b5aebb28",
+      "sizeBytes": 10485759,
+      "extension": "qu3226758e4e07",
+      "outcome": "READY",
+      "httpStatus": 201,
+      "id": "9d32206a-75de-4446-9499-e86f965f6d22"
+    },
+    {
+      "requestId": "968004d5-b5ad-4281-a3b9-36bb9ee8ea12",
+      "sizeBytes": 10485760,
+      "extension": "qu3226758e4e07",
+      "outcome": "READY",
+      "httpStatus": 201,
+      "id": "8cccb9d1-060c-487f-a9ac-470af2811093"
+    },
+    {
+      "requestId": "25d51932-6b5b-4605-9c03-2e97dab196dc",
+      "sizeBytes": 10485761,
+      "extension": "qu3226758e4e07",
+      "outcome": "rejected",
+      "httpStatus": 413,
+      "code": "UPLOAD_SIZE_LIMIT"
+    }
+  ],
+  "cleanup": [
+    {
+      "type": "fixed",
+      "result": "RESTORED"
+    },
+    {
+      "type": "custom",
+      "result": "ABSENT",
+      "extension": "qa83ec7283a951"
+    }
+  ],
+  "note": "No credentials, cookies or CSRF tokens are recorded",
+  "finishedAt": "2026-10-23T08:47:58.620Z",
+  "ok": true
+}

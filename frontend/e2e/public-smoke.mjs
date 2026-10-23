@@ -92,12 +92,20 @@ try {
     return {authenticated:s.authenticated,loginAvailable:s.loginAvailable,httpOnly:cookie.httpOnly,secure:cookie.secure,sameSite:cookie.sameSite};
   });
   if (!writes) {
-    blocked('04-10 write scenarios', 'Read-only run; set PUBLIC_WRITE_TEST=true only for an authorized test');
+    report.checks.push({name:'04-11 write scenarios', result:'NOT_REQUESTED', reason:'Read-only run; writes require explicit execution'});
   } else if (!browserReady || !sessionReady || !policy) {
-    blocked('04-10 write scenarios', 'Public rendering, policy JSON or Origin/session prerequisite failed');
+    blocked('04-11 write scenarios', 'Public rendering, policy JSON or Origin/session prerequisite failed');
   } else {
     await check('04 missing CSRF is rejected', async () => {
-      const r = await api('/api/policy/custom','POST',{extension:'qa'+randomUUID().slice(0,8)},policy.version,false);
+      const fixture='qa'+randomUUID().slice(0,8);
+      const r = await api('/api/policy/custom','POST',{extension:fixture},policy.version,false);
+      if (r.status===201) {
+        const own=r.body?.custom?.find(x=>x.extension===fixture);
+        if (own) {
+          const removed=await api('/api/policy/custom/'+own.id,'DELETE',undefined,r.body.version);
+          report.cleanup.push({type:'unexpected-no-csrf-write',result:removed.status===200?'REMOVED':'MANUAL_REVIEW',extension:fixture});
+        }
+      }
       expect(r.status).toBe(403);
       expect(r.body?.error?.code).toBe('CSRF_INVALID');
       return {status:r.status,code:r.body.error.code};
@@ -199,7 +207,7 @@ try {
 } finally {
   await page.screenshot({path:out+'/public-final.png',fullPage:true}).catch(()=>{});
   report.finishedAt = new Date().toISOString();
-  report.ok = report.checks.every(c=>c.result==='PASS') && (writes || report.checks.filter(c=>c.result==='FAIL').length===0);
+  report.ok = !report.checks.some(c=>c.result==='FAIL') && (!writes || !report.checks.some(c=>c.result==='BLOCKED'));
   await writeFile(out+'/results.json', JSON.stringify(report,null,2));
   console.log('PUBLIC_DEPLOYMENT_RESULT '+JSON.stringify(report));
   await browser.close();

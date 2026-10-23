@@ -1,5 +1,7 @@
 # Hostinger 서버·PostgreSQL / Vercel 프론트 배포 준비 보고서
 
+> **최신 공개 검증:** [PR #6 배포 후 보고서](POST_DEPLOYMENT_CHECKS.md)에서 실제 Vercel 경유 시험 11개 통과를 확인합니다. 사용자 지정으로 영속성·백업·복원 시험은 제외했습니다.
+>
 > 이 문서는 배포 전 준비 기록입니다. 이후 실제 Hostinger·Vercel 배포를 진행했습니다. 현재 적용한 구성, 확인 결과 및 미완료 항목은 [2026-10-23 실제 배포 진행 기록](DEPLOYMENT_PROGRESS_2026-10-23.md)을 먼저 확인하세요. 실제 배포는 기존 Traefik과 Vercel 외부 rewrite를 사용했으며, 아래 Caddy·직접 API 주소 구성은 당시 계획입니다.
 
 
