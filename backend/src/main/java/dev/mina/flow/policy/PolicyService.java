@@ -15,7 +15,11 @@ public class PolicyService {
     public PolicyService(PolicyRepository repository) { this.repository = repository; }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-    public PolicyView get() { return repository.snapshot(); }
+    public PolicyView get() {
+        PolicyView view=repository.snapshot();
+        dev.mina.flow.operations.RequestLogFilter.result("POLICY_READ",view.version(),null);
+        return view;
+    }
 
     @Transactional
     public PolicyView setFixed(String extension, boolean enabled, String ifMatch) {
@@ -26,7 +30,7 @@ public class PolicyService {
         repository.setFixed(extension, enabled);
         repository.advanceVersion();
         repository.audit("FIXED_SET", extension, enabled);
-        return repository.snapshot();
+        return savedView();
     }
 
     @Transactional
@@ -45,7 +49,7 @@ public class PolicyService {
         repository.addCustom(extension);
         repository.advanceVersion();
         repository.audit("CUSTOM_ADDED", extension, true);
-        return repository.snapshot();
+        return savedView();
     }
 
     @Transactional
@@ -57,7 +61,7 @@ public class PolicyService {
         }
         repository.advanceVersion();
         repository.audit("CUSTOM_DELETED", extension, false);
-        return repository.snapshot();
+        return savedView();
     }
 
     private String normalize(String input) {
@@ -67,6 +71,12 @@ public class PolicyService {
         // Validate the raw alphabet before Unicode case folding (Kelvin sign -> k).
         if (!normalized.matches("[A-Za-z0-9]{1,20}")) throw invalidExtension();
         return normalized.toLowerCase(Locale.ROOT);
+    }
+
+    private PolicyView savedView() {
+        PolicyView view=repository.snapshot();
+        dev.mina.flow.operations.RequestLogFilter.result("POLICY_SAVED",view.version(),null);
+        return view;
     }
 
     private PolicyException invalidExtension() {

@@ -60,6 +60,8 @@ docker compose -p flow -f compose.hostinger.yml up --build -d
 docker compose -p flow -f compose.hostinger.yml ps
 ```
 
+위 명령 전에 `APP_VERSION`을 실제 checkout의 전체 Git 커밋으로 설정한다. 배포용 구성은 `local/latest` 같은 기본 태그로 실행하지 않도록 이 값을 필수로 받는다. 빌드 후 실제 이미지 ID도 배포 기록에 남긴다.
+
 변경된 환경변수·볼륨은 실제 Hostinger 환경에서 점검해야 한다. DB 5432와 앱 8080을 인터넷에 직접 공개하지 않고 gateway의 80/443만 연다. SSH는 관리 IP/키로 제한한다. Caddy는 실제 DNS·80/443 접근이 가능해야 인증서를 발급받을 수 있다.
 
 ## 백업은 호스팅 선정 뒤 구현해도 되는가 — DB-O03

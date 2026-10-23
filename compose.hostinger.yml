@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
   migrate:
     build: ./backend
-    image: flow-policy-backend:${APP_VERSION:-local}
+    image: flow-policy-backend:${APP_VERSION:?Set exact source Git commit}
     environment:
       MIGRATE_ONLY: 'true'
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
@@ -30,7 +30,7 @@ services:
     restart: 'no'
   backend:
     build: ./backend
-    image: flow-policy-backend:${APP_VERSION:-local}
+    image: flow-policy-backend:${APP_VERSION:?Set exact source Git commit}
     environment:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
       DB_USER: flow_app

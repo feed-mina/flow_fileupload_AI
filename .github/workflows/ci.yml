@@ -72,7 +72,10 @@ jobs:
       - name: Validate Docker configuration
         env:
           POSTGRES_PASSWORD: ci-disposable-password
-        run: APP_DB_PASSWORD=ci-disposable-app-password docker compose config --quiet
+        run: |
+          APP_DB_PASSWORD=ci-disposable-app-password docker compose config --quiet
+          APP_VERSION=${{ github.sha }} APP_DB_PASSWORD=ci-disposable-app-password APP_ALLOWED_ORIGINS=https://app.example.invalid API_HOST=api.example.invalid docker compose -f compose.hostinger.yml config --quiet
+          docker run --rm --network none -e API_HOST=api.example.invalid -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - name: Nginx UX error contract
         run: |
           docker run -d --rm --name ux-proxy --add-host backend:127.0.0.1 -p 127.0.0.1:18081:80 -v "$PWD/frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236

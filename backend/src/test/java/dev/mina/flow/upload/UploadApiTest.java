@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties="app.allowed-origins=https://frontend.example")
 @AutoConfigureMockMvc
 @Testcontainers
 class UploadApiTest {
@@ -202,6 +202,18 @@ class UploadApiTest {
         mvc.perform(secureMultipart().part(file("a.txt",new byte[]{1})).header("Origin","https://untrusted.invalid"))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("ORIGIN_NOT_ALLOWED"))
                 .andExpect(jsonPath("error.requestId").isNotEmpty());
+        emptyStorage();
+    }
+
+    @Test void sessionCookieCsrfAndExactCredentialedCorsAreEnforced() throws Exception {
+        var security=rest.getForEntity("/api/session",com.fasterxml.jackson.databind.JsonNode.class);
+        String cookie=security.getHeaders().getFirst("Set-Cookie");
+        assertThat(cookie).contains("HttpOnly","SameSite=Lax");
+        mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{1})))
+            .andExpect(status().isForbidden()).andExpect(jsonPath("error.code").value("CSRF_INVALID"));
+        mvc.perform(options("/api/uploads").header("Origin","https://frontend.example").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","X-CSRF-TOKEN"))
+            .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin","https://frontend.example"))
+            .andExpect(header().string("Access-Control-Allow-Credentials","true"));
         emptyStorage();
     }
 }
