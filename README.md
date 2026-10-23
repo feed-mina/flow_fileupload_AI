@@ -19,6 +19,94 @@ PR #1의 T01~T04에 이어 실제 업로드 차단·저장과 커스텀 삭제�
 
 세션 쿠키는 실제 시험에서 HttpOnly·Secure·SameSite=Lax를 확인했습니다. 데모 로그인은 설정하지 않아 로그인 화면을 제공하지 않으며, CSRF 방어가 있어도 정책 편집 권한이나 방문자별 격리가 생기는 것은 아닙니다. 컨테이너 재생성 영속성·백업·복원 시험은 이번 사용자 요청에서 제외했습니다.
 
+## 제출 문서
+
+| 항목 | 문서 |
+|---|---|
+| 고려사항·문제·판단 근거·구현/보류 | [CONSIDERATION.md](CONSIDERATION.md) · [과제 표기 CONSIDERATIONS.md](CONSIDERATIONS.md) |
+| AI 프롬프트·스킬/플러그인·수정 이유 | [PROMPT_LOG.md](PROMPT_LOG.md) |
+| 원문 대화·진행 기록 | [전체 로그](docs/플로우_과제_대화로그.txt) · [기존 개발 기록](docs/PROMPT_LOG.md) |
+| 실제 테이블 정의 | [table_schema](#table_schema) |
+
+## table_schema
+
+PostgreSQL 17 기준입니다. 아래는 **실제 V1~V4 마이그레이션의 누적 결과**이며 설계 예시가 아닙니다. PK(Primary Key)는 기본 키, FK(Foreign Key)는 외래 키입니다. NOT NULL은 빈 값 금지, UNIQUE는 중복 금지, CHECK는 값 조건입니다. TIMESTAMPTZ는 시간대가 있는 시각입니다. 기본값 ‘없음’은 INSERT 시 값을 제공해야 한다는 뜻입니다.
+
+원본 SQL: [V1 정책](backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2 업로드](backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3 감사·조회](backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [V4 권한](backend/src/main/resources/db/migration/V4__least_privilege_application_role.sql)
+
+### policy_scope — 공유 정책 범위·현재 버전
+
+| 컬럼 | 타입 | NULL | 기본값 | 제약·역할 |
+|---|---|---|---|---|
+| id | BIGINT | 불가 | 없음 | PK, CHECK(id = 1). 현재 공유 정책1개만 허용 |
+| version | BIGINT | 불가 | 0 | CHECK(version >= 0). 변경 충돌 확인용 버전 |
+| updated_at | TIMESTAMPTZ | 불가 | CURRENT_TIMESTAMP | 마지막 정책 갱신 시각 |
+
+### extension_policy — 확장자 차단 정책 항목
+
+| 컬럼 | 타입 | NULL | 기본값 | 제약·역할 |
+|---|---|---|---|---|
+| id | BIGINT | 불가 | GENERATED ALWAYS AS IDENTITY | PK, 자동 생성 식별자 |
+| policy_id | BIGINT | 불가 | 없음 | FK → policy_scope(id), 자동 연쇄 삭제 없음 |
+| extension | VARCHAR(20) | 불가 | 없음 | CHECK(extension ~ '^[a-z0-9]{1,20}$'), 정규화된 확장자 |
+| kind | VARCHAR(6) | 불가 | 없음 | CHECK(kind IN ('FIXED', 'CUSTOM')) |
+| enabled | BOOLEAN | 불가 | 없음 | 고정 항목의 차단 여부. CUSTOM은 true만 허용 |
+| sort_order | SMALLINT | 불가 | 0 | 화면 정렬 순서 |
+| updated_at | TIMESTAMPTZ | 불가 | CURRENT_TIMESTAMP | 항목 수정 시각 |
+
+**복합 제약:** `uq_policy_extension UNIQUE(policy_id, extension)`으로 정책 안의 중복을 막습니다. `ck_kind_extension`은 FIXED이면 `bat/cmd/com/cpl/exe/scr/js` 중 하나만, CUSTOM이면 이7종 이외의 이름이며 enabled=true인 경우만 허용합니다. 고정7종은 최초 마이그레이션 때 false로 생성합니다. 초기 상태가 현재 공개 데모에서도 항상 false라는 뜻은 아닙니다.
+
+**서버 규칙과 DB 제약의 차이:** 최대 커스텀200개는 SQL CHECK나 트리거에 없습니다. [PolicyService](backend/src/main/java/dev/mina/flow/policy/PolicyService.java)가 같은 트랜잭션에서 `policy_scope`의 id=1행을 `FOR UPDATE`로 잠그고 버전·중복·개수 검사 후 삽입합니다. 앱 API는 동시 요청을 제어하지만 직접 DB 쓰기는 이200개 규칙을 우회할 수 있습니다. 고정7개가 언제나 존재한다는 것도 초기 데이터와 앱 동작의 규칙이며, CHECK가 삭제 자체를 금지하는 것은 아닙니다.
+
+### policy_change — 정책 변경 감사 기록
+
+| 컬럼 | 타입 | NULL | 기본값 | 제약·역할 |
+|---|---|---|---|---|
+| id | BIGINT | 불가 | GENERATED ALWAYS AS IDENTITY | PK |
+| policy_id | BIGINT | 불가 | 없음 | FK → policy_scope(id), 자동 연쇄 삭제 없음 |
+| policy_version | BIGINT | 불가 | 없음 | CHECK(policy_version > 0) |
+| action | VARCHAR(16) | 불가 | 없음 | CHECK: FIXED_SET / CUSTOM_ADDED / CUSTOM_DELETED |
+| extension | VARCHAR(20) | 불가 | 없음 | CHECK(extension ~ '^[a-z0-9]{1,20}$') |
+| enabled | BOOLEAN | 불가 | 없음 | 사건의 활성값. 삭제는 false로 기록 |
+| created_at | TIMESTAMPTZ | 불가 | CURRENT_TIMESTAMP | 기록 시각 |
+
+`UNIQUE(policy_id, policy_version)`으로 정책의 같은 버전에 감사가 중복되지 않게 합니다. 정책 변경·버전 증가·감사는 한 트랜잭션입니다. 인증된 변경자·이전 값 컬럼은 없습니다. 현재 앱 계정에는 이 테이블의 INSERT만 허용하며 조회·수정·삭제 권한은 주지 않습니다.
+
+### upload_record — 업로드 메타데이터와 결과 조회
+
+확장자 정책 자체와 별개인 보조 테이블입니다. 파일 본문은 DB에 넣지 않고 업로드 볼륨의 UUID.bin에 저장합니다.
+
+| 컬럼 | 타입 | NULL | 기본값 | 제약·역할 |
+|---|---|---|---|---|
+| id | UUID | 불가 | 없음 | PK, 서버에서 생성한 파일 ID |
+| original_name | TEXT | 불가 | 없음 | CHECK(octet_length(original_name) BETWEEN 1 AND 255), UTF-8 바이트 제한 |
+| extension | VARCHAR(20) | 불가 | 없음 | CHECK(extension ~ '^[a-z0-9]{1,20}$') |
+| size_bytes | BIGINT | 불가 | 없음 | CHECK(size_bytes BETWEEN 1 AND 10485760) |
+| policy_version | BIGINT | 불가 | 없음 | CHECK(policy_version >= 0), 업로드에 적용된 과거 스냅샷. 현재 버전의 FK가 아님 |
+| state | VARCHAR(7) | 불가 | 없음 | CHECK(state IN ('PENDING', 'READY')) |
+| created_at | TIMESTAMPTZ | 불가 | CURRENT_TIMESTAMP | 생성 시각 |
+| request_id | UUID | 불가 | 없음 | UNIQUE, 응답 유실 후 결과 조회·같은 요청 중복 방어 |
+
+V3는 기존 행의 request_id를 id로 채운 뒤 NOT NULL·UNIQUE를 적용합니다. 신규 요청은 요청 UUID와 파일 UUID를 구분합니다.
+
+### 인덱스 정의와 조회 경로
+
+아래 인덱스는 모두 PK/UNIQUE 제약으로 PostgreSQL이 자동 생성하는 B-tree 인덱스입니다. 별도 `CREATE INDEX`는 V1~V4에 없습니다. FK는 스스로 인덱스를 만들지 않습니다.
+
+| 테이블 | 인덱스 / 제약 이름 | 컬럼 순서 | 종류·용도 |
+|---|---|---|---|
+| policy_scope | policy_scope_pkey | id | PK, 정책 행 조회·잠금 |
+| extension_policy | extension_policy_pkey | id | PK, 항목 식별 |
+| extension_policy | uq_policy_extension | policy_id, extension | UNIQUE, 중복 방지·정책별 확장자 존재 확인; 선두 policy_id가 FK 조회에도 활용 가능 |
+| policy_change | policy_change_pkey | id | PK, 감사 식별 |
+| policy_change | policy_change_policy_id_policy_version_key | policy_id, policy_version | UNIQUE, 정책별 버전 중복 방지; 선두 policy_id가 FK 조회에도 활용 가능 |
+| upload_record | upload_record_pkey | id | PK, 파일 식별 |
+| upload_record | upload_record_request_id_key | request_id | UNIQUE, 업로드 결과 조회·같은 요청 방어 |
+
+정책 목록의 실제 쿼리는 `WHERE policy_id=1 AND kind=? ORDER BY sort_order,id`입니다. `(policy_id,kind,sort_order,id)` 전용 인덱스는 없습니다. [격리 DB 측정](docs/TEST_RESULTS.md)에서7~207행은 순차 스캔·정렬을 선택했고, 커스텀200개 조회 p95는1.808ms였습니다. 이를 근거로 추가 인덱스를 도입하지 않았으며 공개 서버 지연으로 해석하지 않습니다.
+
+`updated_at`은 갱신 트리거가 아니라 앱의 UPDATE SQL로 바뀝니다. 사용자별 소유권·허용목록 전환·정상 파일 전체 총량은 현재 스키마에 없습니다. 권한 상세와 기존 DB 적용 절차는 [배포 준비 문서](docs/HOSTINGER_VERCEL_DEPLOYMENT.md)를 따릅니다. Flyway 관리 테이블은 정책 도메인 정의에서 제외했습니다.
+
 ## 로컬 실행
 
 Docker 엔진이 실행 중인 환경에서 저장소 루트에서 진행합니다.

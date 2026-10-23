@@ -10,12 +10,13 @@
 | 공개 화면 | [Vercel 화면](https://flow-fileupload-ai.vercel.app/) | 공개 Chromium 시험 통과 |
 | 서버·API | [Hostinger](https://flow.srv1869569.hstgr.cloud/) · [정책 JSON](https://flow-fileupload-ai.vercel.app/api/policy) | 조회·쓰기·업로드 경로 시험 통과 |
 | 실행 방법 | [README](../README.md) | 로컬·실제 배포 구분 |
-| 고려사항·구현 상태 | [주석 가이드](IMPLEMENTATION_GUIDE_ANNOTATED.md) | PR #6의 공개 검증 결과 추가 |
+| 고려사항·판단 근거 | [CONSIDERATION](../CONSIDERATION.md) · [과제 표기 CONSIDERATIONS](../CONSIDERATIONS.md) · [주석 가이드](IMPLEMENTATION_GUIDE_ANNOTATED.md) | 과제3번 네 관점·상태·이유·코드 근거 정리 |
+| 테이블 정의 | [README table_schema](../README.md#table_schema) | V1~V4 기준 컬럼·타입·제약·인덱스와 서버 규칙 구분 |
 | 실제 배포 이력 | [배포 기록](DEPLOYMENT_PROGRESS_2026-10-23.md) | 최초 기록과 후속 검증 구분 |
 | 공개 시험 결과 | [6개 항목 보고서](POST_DEPLOYMENT_CHECKS.md) · [증거 JSON](evidence/public-deployment-2026-10-23.json) | 11개 통과 |
 | 기존 회귀 시험 | [시험 기록](TEST_RESULTS.md) · [PR #6 Actions](https://github.com/feed-mina/flow_fileupload_AI/pull/6/checks) | 최종 커밋의 실행 결과 확인 |
 | 구현 설명 | [PR1~3 보고서 목록](reports/README.md) · [DEC 구현](DEC_IMPLEMENTATION.md) · [UX 구현](UX_IMPLEMENTATION.md) | 준비 |
-| AI 활용 기록 | [PROMPT_LOG](PROMPT_LOG.md) | 요청·채택·검증 기록 |
+| AI 활용 기록 | [제출용 PROMPT_LOG](../PROMPT_LOG.md) · [기존 개발 기록](PROMPT_LOG.md) | 시간 순 입력·스킬/플러그인·채택/수정/제외·검증 근거 |
 | 지원자 최종 회고 | 아래 작성 항목 | **지원자 본인 작성 필요** |
 
 ## 평가자가 확인할 흐름
