@@ -14,7 +14,7 @@
 | DB-U04 권장 | 고정 변경·추가·삭제와 버전 증가·policy_change 감사 INSERT를 하나의 트랜잭션으로 처리 | 감사 실패 때 세 종류 변경 모두 롤백 |
 | BE-U01 필수 | 422 EXTENSION_BLOCKED, 판단 확장자와 적용 정책 버전 제공 | 실제 정책 EXE 차단·해제 API/브라우저 회귀 |
 | BE-U02 권장 | 400 INVALID_EXTENSION에 field=extension과 영문·숫자 1~20자 안내 | 공백 입력 계약 시험 |
-| BE-U03 권장 | 201번째 커스텀 추가 409 CUSTOM_LIMIT_REACHED, 중복/고정 충돌은 별도 코드 | 기존 200개 한도·1910개 경쟁 시험 |
+| BE-U03 권장 | 201번째 커스텀 추가 409 CUSTOM_LIMIT_REACHED, 중복/고정 충돌은 별도 코드 | 기존 200개 한도·199개 경쟁 시험 |
 | BE-U04 권장 | Nginx·multipart·서비스 크기 오류는 413 UPLOAD_SIZE_LIMIT과 같은 일반 안내. 내부 경로 없음 | 실제 앱 HTTP 10 MiB 경계 + 별도 실제 Nginx 요청 헤더 12 MiB+1 거부 시험 |
 | BE-U05 권장 | 내부 예외는 서버에 기록, 응답은 일반 안내·오류 추적 ID. 업로드 읽기 예외도 일반 오류로 변환 | 파일 읽기/이동 장애 및 DB 감사 장애의 응답 정보 비노출 검사 |
 | BE-U06 권장 | 업로드 전에 클라이언트 UUID 요청 번호 생성. 응답 불명확 시 GET 조회, 자동 POST 재전송 금지. 15초 클라이언트 제한 | 실제 저장 후 응답 차단 → 새로고침 → 동일 결과 GET 조회, POST 1회 확인 |
@@ -44,7 +44,7 @@ V3 `upload_record.request_id`: 기존 행은 자신의 파일 ID로 채우고 NO
 ## 실행·시험 범위
 
 - 로컬: `node --test frontend/src/lib/api.test.js` 10개 통과. 로컬 Docker 엔진이 연결되지 않아 PostgreSQL·Nginx·브라우저 시험은 실행하지 못했다.
-- CI 대상: 서버 210개(정책 11 + 업로드 서비스 2 + 업로드 API 16), Node 10개, 브라우저 11개, 실제 두 JVM 재시작 T01~T04, Vite build, Compose config, Nginx 413 계약. 최종 실행의 실제 결과·URL은 이번 PR 본문과 Checks에서 확인한다. 이 수치는 실행 전 구성 수이며 통과 선언이 아니다.
+- 최종 구현 `6450a8924ef7fc0d459717ea119a884a0eb5759c`의 [실제 CI](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39903138964): 서버 30개(정책 11 + 업로드 서비스 2 + 업로드 API 17, skip 0), Node 10개, 브라우저 11개(retry 0), 실제 두 JVM 재시작 T01~T04, Vite build, Compose config, Nginx 413 계약 모두 통과. 이전 시험 수 표기 오류를 실제 로그 기준으로 정정했다.
 - 새 실제 Nginx 시험은 같은 nginx.conf·동일 이미지 태그를 사용해 과대 Content-Length의 JSON 413을 검사한다. 앱 10 MiB 경계와 별개다. 전체 앱의 Docker 이미지 빌드·Compose 기동·컨테이너 재생성 또는 공개 배포 시험으로 확대 해석하지 않는다.
 - 강제 종료·불명확한 DB 커밋·디스크 정리 실패는 기존 수동 DB/파일 대조 절차를 따른다. 인증·악성코드 검사·공개 배포·보관/총량 정책은 이번 범위 밖이다.
 

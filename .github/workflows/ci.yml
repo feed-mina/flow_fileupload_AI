@@ -61,6 +61,11 @@ jobs:
           DB_URL: jdbc:postgresql://127.0.0.1:5432/flow_browser
           PLAYWRIGHT_CHANNEL: chrome
         run: npm run test:e2e
+      - name: Report interaction and layout
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node e2e/report-check.mjs
       - name: Validate Docker configuration
         env:
           POSTGRES_PASSWORD: ci-disposable-password
