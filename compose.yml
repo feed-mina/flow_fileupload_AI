@@ -18,6 +18,9 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-flow_policy}
       DB_USER: ${POSTGRES_USER:-flow}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      UPLOAD_ROOT: /app/uploads
+    volumes:
+      - upload_data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -29,3 +32,4 @@ services:
       - backend
 volumes:
   policy_data:
+  upload_data:

@@ -106,6 +106,30 @@ class PolicyApiTest {
         assertThat(get().getBody().get("version").asLong()).isZero();
     }
 
+    @Test
+    void customLengthDeleteAndDuplicateAtLimit() {
+        String twenty = "a".repeat(20);
+        var added = exchange("/custom", HttpMethod.POST, Map.of("extension", twenty), "\"0\"");
+        assertThat(added.getStatusCode().value()).isEqualTo(201);
+        long id = added.getBody().get("custom").get(0).get("id").asLong();
+        assertThat(exchange("/custom/"+id,HttpMethod.DELETE,null,"\"1\"").getStatusCode().value()).isEqualTo(200);
+        assertThat(get().getBody().get("customCount").asInt()).isZero();
+        assertThat(exchange("/custom/"+id,HttpMethod.DELETE,null,"\"2\"").getStatusCode().value()).isEqualTo(404);
+        for (int i=0;i<200;i++) jdbc.update("INSERT INTO extension_policy(policy_id,extension,kind,enabled) VALUES(1,?,'CUSTOM',TRUE)","x"+i);
+        var duplicate = exchange("/custom",HttpMethod.POST,Map.of("extension","X0"),"\"2\"");
+        assertThat(duplicate.getBody().get("error").get("code").asText()).isEqualTo("DUPLICATE_EXTENSION");
+        assertThat(exchange("/custom",HttpMethod.POST,Map.of("extension","new"),"\"2\"").getBody().get("error").get("code").asText()).isEqualTo("CUSTOM_LIMIT_REACHED");
+    }
+
+    @Test
+    void concurrentAdditionAt199CannotExceed200() {
+        for (int i=0;i<199;i++) jdbc.update("INSERT INTO extension_policy(policy_id,extension,kind,enabled) VALUES(1,?,'CUSTOM',TRUE)","x"+i);
+        var first = java.util.concurrent.CompletableFuture.supplyAsync(() -> exchange("/custom",HttpMethod.POST,Map.of("extension","alpha"),"\"0\""));
+        var second = java.util.concurrent.CompletableFuture.supplyAsync(() -> exchange("/custom",HttpMethod.POST,Map.of("extension","beta"),"\"0\""));
+        assertThat(List.of(first.join().getStatusCode().value(),second.join().getStatusCode().value())).containsExactlyInAnyOrder(201,412);
+        assertThat(get().getBody().get("customCount").asInt()).isEqualTo(200);
+    }
+
     private ResponseEntity<JsonNode> get() { return rest.getForEntity("/api/policy", JsonNode.class); }
 
     private ResponseEntity<JsonNode> exchange(String suffix, HttpMethod method, Object body, String version) {

@@ -20,10 +20,10 @@ test('T01 → T02 → T04: 실제 서버와 DB로 초기 상태·선택 저장·
   await expect(page.getByRole('status')).toHaveText('규칙을 저장했습니다.');
   await page.getByLabel('추가할 확장자').fill('sh');
   await page.getByRole('button', { name: '추가', exact: true }).click();
-  await expect(page.getByRole('list', { name: '커스텀 확장자 목록' }).getByRole('listitem')).toHaveText(['sh']);
+  await expect(page.getByRole('list', { name: '커스텀 확장자 목록' }).getByRole('listitem')).toContainText(['sh']);
   await expect(page.getByLabel('커스텀 확장자 개수')).toHaveText('1/200');
   await page.reload();
-  await expect(page.getByRole('list', { name: '커스텀 확장자 목록' }).getByRole('listitem')).toHaveText(['sh']);
+  await expect(page.getByRole('list', { name: '커스텀 확장자 목록' }).getByRole('listitem')).toContainText(['sh']);
   await expect(page.getByRole('checkbox', { name: 'exe', exact: true })).not.toBeChecked();
 });
 
@@ -65,4 +65,27 @@ test('좁은 화면에서 키보드로 고정 선택을 저장할 수 있다', a
   await expect(page.getByRole('checkbox', { name: 'exe', exact: true })).toBeChecked();
   await expect(page.getByRole('status')).toHaveText('규칙을 저장했습니다.');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('DEC 업로드: 선택된 EXE 차단 → 해제 후 저장 → 커스텀 삭제 유지', async ({ page }) => {
+  await page.goto('/');
+  const exe = page.getByRole('checkbox', { name: 'exe', exact: true });
+  await expect(exe).not.toBeChecked();
+  await exe.click();
+  await expect(exe).toBeChecked();
+  await expect(exe).toBeEnabled();
+  await page.getByLabel('업로드할 파일').setInputFiles({ name:'sample.EXE', mimeType:'image/jpeg', buffer:Buffer.from('MZ test fixture') });
+  await page.getByRole('button',{name:'파일 업로드',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('차단한 확장자');
+  await expect(page.getByText('업로드 완료',{exact:true})).toHaveCount(0);
+  await exe.click();
+  await expect(exe).not.toBeChecked();
+  await expect(exe).toBeEnabled();
+  await page.getByRole('button',{name:'파일 업로드',exact:true}).click();
+  await expect(page.getByText('업로드 완료',{exact:true})).toBeVisible();
+  await expect(page.getByText(/파일 ID:/)).toBeVisible();
+  await page.getByRole('button',{name:'sh 삭제',exact:true}).click();
+  await expect(page.getByLabel('커스텀 확장자 개수')).toHaveText('0/200');
+  await page.reload();
+  await expect(page.getByRole('list',{name:'커스텀 확장자 목록'}).getByRole('listitem')).toHaveCount(0);
 });

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Alert, Button, Card, Checkbox, Input, Skeleton, Tag } from 'antd';
 import { usePolicy } from './usePolicy.js';
+import UploadPanel from './UploadPanel.jsx';
 
 export default function App() {
-  const { policy, loading, pending, error, notice, mustRefresh, refresh, updateFixed, createCustom } = usePolicy();
+  const { policy, loading, pending, error, notice, mustRefresh, refresh, updateFixed, createCustom, removeCustom } = usePolicy();
   const [extension, setExtension] = useState('');
   const disabled = loading || Boolean(pending) || mustRefresh;
 
@@ -43,12 +44,13 @@ export default function App() {
               </form>
               <p className="footnote">영문·숫자 최대 {policy.maxLength}자 · 최대 {policy.maxCount}개<br />앞의 점과 대소문자는 저장할 때 정리합니다.</p>
               <div className="custom-list" role="list" aria-label="커스텀 확장자 목록">
-                {policy.custom.length ? policy.custom.map((item) => <span role="listitem" key={item.id}><Tag>{item.extension}</Tag></span>) : <p className="empty">추가한 확장자가 없습니다.</p>}
+                {policy.custom.length ? policy.custom.map((item) => <span role="listitem" key={item.id}><Tag>{item.extension}</Tag><Button type="text" aria-label={`${item.extension} 삭제`} disabled={disabled} onClick={() => removeCustom(item.id)}>×</Button></span>) : <p className="empty">추가한 확장자가 없습니다.</p>}
               </div>
             </Card>
           </div>
         )}
-        <p className="scope-note">파일 전송과 커스텀 항목 삭제 기능은 다음 단계에서 제공됩니다.</p>
+        {policy && <UploadPanel disabled={disabled} />}
+        <p className="scope-note">현재 로컬 단일 정책입니다. 공개 배포 전 권한·보관 기간·전체 저장 한도를 결정해야 합니다.</p>
       </main>
     </div>
   );
