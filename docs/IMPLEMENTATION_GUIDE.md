@@ -4,7 +4,7 @@
 
 > **과제 핵심 한 줄:** 확장자 차단 정책을 데이터베이스에 저장하고 실제 파일 업로드에 서버가 강제 적용하는 서비스를 배포하며, 보안·예외·운영 판단과 AI 활용·검증 과정을 근거로 남긴다.
 
-이 문서는 **구현 전 설계·점검 가이드**다. 체크 항목은 구현 완료나 시험 통과를 의미하지 않는다. 기준 문서는 사용자 제공 `과제_파일업로드_AI개발.md` 전체다. 저장소는 작성 시점에 비어 있었다.
+이 문서는 **구현 전 설계·점검 가이드**다. 체크 항목은 구현 완료나 시험 통과를 의미하지 않는다. 기준 문서는 사용자 제공 `과제_파일업로드_AI개발.md` 전체다. 최초 작성 시 저장소는 비어 있었으며, 현재는 문서가 있고 앱 소스는 아직 없다.
 
 ## 1. 확정 기술 스택과 사용 방법
 
@@ -550,3 +550,72 @@ REST(Representational State Transfer) 방식의 경로와 HTTP 상태 코드를 
 - 완료: 과제 원문 확인, 사용자 기술 선택 반영, 영역 5개 × 관점 4개 점검표, DB·API 초안, 시험 계획, 구현 순서, 기록 양식 작성.
 - 미완료: DEC 제안 확정, 애플리케이션 구현, 자동 검사 실행, 실제 배포.
 - 보안 검토표가 존재한다는 이유만으로 서비스가 안전하다고 판정하지 않는다. 구현·검증 증거를 붙인 뒤 완료 상태를 갱신한다.
+
+
+## 19. UI 리서치·오픈소스 적용 업데이트 (2026-10-23)
+
+집계 정정: 이전 답변의 123개는 재등장한 번호를 포함한 집계였으며, 고유 점검 항목은 108개입니다. 28개 시험 계획은 변동 없습니다.
+
+Ant Design을 우선 제안하고 shadcn/ui는 대안·디자인 참고, react-dropzone은 기능 중복으로 초기 보류한다. 설치·구현 완료가 아니며 효과는 미측정이다.
+
+| 자료 | 가져올 역할 | 판정·라이선스 | 수정할 부분 |
+|---|---|---|---|
+| [R01 ant-design/ant-design](https://github.com/ant-design/ant-design) | Checkbox·Input·Tag·Upload·Alert·Button을 한 UI 체계로 구성 | 도입 권장 / MIT | 예시의 외부 전송 주소·복수 파일 필드·HTTP 오류 처리·성공 판단을 교체 |
+| [R02 shadcn-ui/ui](https://github.com/shadcn-ui/ui) | 카드·간격·입력 테두리·선택 상태와 포커스 처리 참고 | 대안·디자인 참고 / MIT | Ant Design과 섞어 UI 라이브러리를 두 개 설치하지 않음 |
+| [R03 react-dropzone/react-dropzone](https://github.com/react-dropzone/react-dropzone) | 나중에 별도 드롭존이 꼭 필요할 때 입력 기능만 비교 | 초기 도입 보류 / MIT | Ant Upload와 중복 설치하지 않고 전송·보안 검증은 서버에 둠 |
+| [R04 TanStack/query](https://github.com/TanStack/query) | 저장 완료 후 정책 재조회·로딩·실패 상태 관리 | 상태 관리 도입 후보 / MIT | 처음에는 낙관적 갱신 없이 성공 응답을 기준으로 확정; 변경 자동 재시도 비활성 정책 검토 |
+| [R05 spring-guides/gs-uploading-files](https://github.com/spring-guides/gs-uploading-files) | 컨트롤러와 저장 서비스 분리·스트림 복사·경로 검증 구조 | 구조만 수정 적용 / Apache-2.0 | 시작 시 전체 삭제 제거, 원본 이름 저장·덮어쓰기를 UUID·독립 저장소로 교체 |
+| [R06 flyway/flyway](https://github.com/flyway/flyway) | 정책 테이블과 고정 7종 false 초기 데이터를 버전 SQL로 관리 | 마이그레이션 도입 후보 / Apache-2.0 | 실행 시마다 초기화하지 않고 적용된 변경을 추적; Boot와 PostgreSQL 모듈 호환 확인 |
+| [R07 testcontainers/testcontainers-java](https://github.com/testcontainers/testcontainers-java) | 같은 PostgreSQL 환경에서 중복·200개 동시 추가·롤백 검증 | 통합 시험 도입 후보 / MIT | 예제의 오래된 DB 태그를 운영과 맞는 지원 버전으로 교체 |
+| [R08 microsoft/playwright](https://github.com/microsoft/playwright) | 파일 선택·새로고침·저장 실패·키보드·좁은 화면 재현 | 화면 시험 도입 후보 / Apache-2.0 | 무해한 메모리 파일과 격리된 시험 정책 사용, 기대와 실제 결과 분리 |
+| [R09 docker/awesome-compose](https://github.com/docker/awesome-compose) | 서비스 네트워크·DB 볼륨·비밀값 파일 구조 참고 | 구성 수정 적용 / CC0-1.0 | 이미지 태그 고정·healthcheck·uploads 볼륨·React 프록시·운영 비밀 관리 보완 |
+| [R10 OWASP/CheatSheetSeries](https://github.com/OWASP/CheatSheetSeries) | 파일명·크기·저장 위치·권한·내용 검사의 한계 점검 | 보안 점검 근거 / CC-BY-SA-4.0 | 과제의 차단목록 요구는 유지하고 허용목록·악성코드 검사는 별도 결정으로 구분 |
+
+### 19.1 기존 항목의 적용 연결
+
+| 영역·관점 | 자료 | 예정 위치 | 직접 구현·검증 |
+|---|---|---|---|
+| DB-U | R06·R07 | backend/.../PolicyService.java | 초기값·롤백은 직접 구현 |
+| DB-S | R07·R10 | backend/.../db/migration/ | DB 제약·권한은 직접 설계 |
+| DB-P | R06·R07 | backend/.../PolicyRepository.java | 잠금·200개·버전 비교는 직접 구현 |
+| DB-O | R06·R09 | docs/DEPLOYMENT.md | 감사·백업·보관 기간은 자체 정책 |
+| BE-U | R05·R08 | backend/.../ApiExceptionHandler.java | 응답 계약·실패 판정은 직접 구현 |
+| BE-S | R05·R10 | backend/.../FileValidationService.java | 정책·파일 검증은 직접 구현 |
+| BE-P | R05·R07 | backend/.../PolicyService.java | 적용 시점·정규화·충돌은 자체 설계 |
+| BE-O | R05·R09·R10 | backend/.../FileStorageService.java | 보상·정리·모니터링은 자체 구성 |
+| FE-U | R01·R04·R08 | frontend/src/features/policy/PolicyPage.tsx | 저장·실패·접근성 연결 |
+| FE-S | R01·R08·R10 | frontend/src/features/upload/UploadPanel.tsx | 입력 편의와 서버 보안을 분리 |
+| FE-P | R01·R04 | frontend/src/features/policy/usePolicy.ts | 서버 확정 상태와 화면 연결 |
+| FE-O | R01·R04·R08 | frontend/src/lib/api.ts | 응답 순서·재시도·환경별 설정 |
+| DP-U | R09·R08 | infra/nginx.conf | 호스팅·공개 주소·SPA 직접 구성 |
+| DP-S | R09·R10 | compose.yaml | 비밀값·권한·HTTPS 직접 구성 |
+| DP-P | R09 | compose.yaml | DB·파일 영속 저장 직접 검증 |
+| DP-O | R09·R08 | docs/DEPLOYMENT.md | 준비·용량·복원 시험 추가 |
+| GH-U | R08·R09 | README.md | 실행·제출 안내 직접 작성 |
+| GH-S | R09·R10 | .gitignore · .github/workflows/ci.yml | 비밀·라이선스·권한 직접 점검 |
+| GH-P | R06·R07·R08 | CONSIDERATIONS.md · PROMPT_LOG.md | 본인 판단·AI 기록 직접 작성 |
+| GH-O | R07·R08·R09 | .github/workflows/ci.yml | 검사 커밋·이미지·배포 연결 |
+
+### 19.2 그대로 복사하지 않을 부분
+
+- Spring 예제의 시작 시 전체 폴더 삭제를 제외한다.
+- Ant Design 예제의 외부 데모 URL·복수 파일 필드를 바꾸고 HTTP 오류를 성공으로 처리하지 않는다.
+- Docker 이미지 태그·업로드 볼륨·준비 검사·프록시를 보완한다.
+- Testcontainers의 오래된 예시 DB 태그를 복사하지 않는다.
+- UI·캐시 라이브러리가 서버 정책·동시성까지 해결한다고 가정하지 않는다.
+- 예상 화면에서도 고정 7종 최초 미선택과 커스텀 0/200을 지킨다.
+
+### 19.3 보고서
+
+- [easy md 보고서](2026-10-23/flow-ui-research-20261023-105551-easy.md): 예상 GUI·진행 흐름·관계도·쉬운 행동 안내.
+- [easy html 보고서](2026-10-23/flow-ui-research-20261023-105551-easy.html): 예상 GUI·진행 흐름·관계도·쉬운 행동 안내.
+- [fix md 보고서](2026-10-23/flow-ui-research-20261023-105551-fix.md): 예상 GUI·진행 흐름·관계도·108개 개별 적용표.
+- [fix html 보고서](2026-10-23/flow-ui-research-20261023-105551-fix.html): 예상 GUI·진행 흐름·관계도·108개 개별 적용표.
+
+예정 파일은 아직 구현된 앱 파일이 아니다. UI 연구와 문서는 완료했으며 앱 구현·28개 시험·배포는 미착수다. 보고서 검수와 앱 동작 시험은 별도로 기록한다.
+
+### 19.4 다음 작업 하나
+
+미선택 7종 → 하나 선택 → 저장 성공·실패 → 새로고침 유지까지 React·Spring Boot·PostgreSQL을 연결하고 실제 증거를 기록한다.
+
+[이번 보고서 검수 기록](2026-10-23/flow-ui-research-20261023-105551-qa.md): 문서 정적 검사와 실제 브라우저·앱 시험을 구분합니다.

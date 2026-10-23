@@ -1,0 +1,393 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>파일 업로드 화면, 쉽게 고르기</title><style>
+:root{--ink:#202b43;--muted:#59677f;--line:#dce2ed;--accent:#5544c5}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:110px}body{margin:0;background:#f3f5fa;color:var(--ink);font:17px/1.7 "Malgun Gothic","Segoe UI",sans-serif;overflow-wrap:anywhere}.goal{position:sticky;top:0;z-index:20;background:#22213e;color:#fff;padding:12px max(18px,calc((100vw - 1320px)/2));font-size:16px;line-height:1.5;max-height:24vh;overflow:auto}main{max-width:1370px;margin:auto;padding:30px 22px}header,section{padding:30px;background:white;border:1px solid var(--line);border-radius:20px;margin-bottom:26px}header{padding:42px;background:linear-gradient(115deg,#fff 45%,#eeebff)}h1{font-size:clamp(30px,3.5vw,48px);line-height:1.25;letter-spacing:-1.3px;margin:18px 0 22px}h2{font-size:26px;line-height:1.4}h3{font-size:21px;line-height:1.5}p{margin:12px 0}a{color:#4032ac;text-underline-offset:4px}a:focus-visible,summary:focus-visible{outline:3px solid #b8790c;outline-offset:4px}.kicker{color:#5947bd;font-weight:700;letter-spacing:1.2px}.lead{font-size:20px;max-width:950px}.badges,.jump{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.badge{background:#eeebfb;border-radius:8px;padding:5px 12px;font-size:16px}.jump a{background:white;border:1px solid #b2a8db;border-radius:8px;padding:10px 14px;text-decoration:none}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px}.stat{background:#fff;border:1px solid #d9d2ed;border-radius:12px;padding:16px}.stat b{font-size:28px;display:block;color:#5845bd}.stat span,.muted{font-size:16px;color:var(--muted)}.hint,.notice{background:#fff6e4;border:1px solid #e7d1a6;border-radius:12px;padding:16px 18px;margin-top:18px}.notice.neutral{background:#f5f6fa;border-color:#dce1ea}.notice.danger{background:#fff1ef;color:#8b2d29;border-color:#ecb9b2}table{width:100%;border-collapse:collapse;font-size:16px;margin:18px 0}th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:12px;min-width:110px}th{background:#f4f5fa}.tablewrap{overflow-x:auto}details{border:1px solid var(--line);padding:18px;border-radius:12px;margin:16px 0}summary{cursor:pointer;font-weight:700}.flowwrap{max-width:930px;margin:auto}svg{display:block;width:100%;height:auto}.svgt{font:700 21px "Malgun Gothic","Segoe UI",sans-serif;fill:#24304a}.svgs{font:18px "Malgun Gothic","Segoe UI",sans-serif;fill:#4c5a74}.map{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:26px;align-items:start}.panels{position:sticky;top:105px}.panel{padding:22px;background:#f2efff;border:2px solid #a89adb;border-radius:14px;margin-bottom:18px;scroll-margin-top:115px}.panel h3{margin-top:0}.panel .request{padding:14px;background:white;border-left:4px solid #6954c4}.selected{font-weight:700;color:#4933a3}.crumb{font-size:16px;color:#65578e}.diagram a:hover rect,.diagram a:focus rect{fill:#ded6ff;stroke:#5941bb;stroke-width:4}
+@supports selector(:has(*)){.panel{display:none}.panel.default{display:block}.panels:has(.panel:target) .panel{display:none}.panels:has(.panel:target) .panel:target{display:block}}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:22px}.before{border:2px dashed #cad2e0;background:#f7f8fc;padding:22px;border-radius:14px}.before .block{margin-top:20px;border:1px solid #dae0ea;padding:20px;background:white;border-radius:10px}.before .line{height:12px;background:#dce1eb;border-radius:4px;margin-top:14px}.appmock{background:#f7f8fc;border:1px solid #cfd5e5;border-radius:16px;overflow:hidden;font-size:16px;box-shadow:0 10px 30px #26324a0d}.appbar{background:white;padding:18px 24px;border-bottom:1px solid #e0e4ee;display:flex;justify-content:space-between;gap:10px;align-items:center}.appintro{padding:24px 28px 10px}.appintro h3{font-size:28px;letter-spacing:-.8px;margin:0 0 12px}.appintro p{color:#5e6a80}.appgrid{display:grid;grid-template-columns:1.07fr 1fr;gap:20px;padding:16px 24px 24px}.appcard{min-width:0;background:white;border:1px solid #dbe0eb;border-radius:13px;padding:22px}.cardhead{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.fixed{display:flex;gap:10px;flex-wrap:wrap}.check{display:inline-flex;gap:7px;align-items:center;background:#f8f9fc;border:1px solid #d8dfec;border-radius:7px;padding:8px 10px}.square{display:inline-block;width:18px;height:18px;border:1.5px solid #98a5ba;border-radius:4px;background:white}.check.on{background:#f1ecff;border-color:#b6aae4}.check.on .square{background:#5a46c1;border-color:#5a46c1;position:relative}.check.on .square:after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg)}.inputrow{display:flex;gap:8px;margin-top:16px}.fakeinput{flex:1;min-width:0;border:1px solid #ccd4e2;border-radius:8px;padding:10px 12px;color:#68748a}.fakebutton{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;min-height:44px;background:#5b45c5;color:white;border-radius:8px;font-weight:600;text-align:center}.fakebutton.outline{background:white;color:#5235ae;border:1px solid #a89bd8}.fakebutton.wide{width:100%}.fakebutton.disabled{background:#e3e7ef;color:#67748b}.chips{margin-top:18px;min-height:45px}.chip{display:inline-flex;gap:18px;background:#efebff;border:1px solid #d6cbee;color:#5238ac;border-radius:7px;padding:6px 12px}.dropbox{display:flex;flex-direction:column;align-items:center;gap:12px;border:1.5px dashed #aca0d9;background:#faf9ff;border-radius:10px;padding:22px 12px;margin:20px 0 12px;text-align:center}.filemark{width:28px;height:36px;border:2px solid #8d7fc2;border-radius:5px;background:#ece7fc}.status{font-size:16px;background:#eef1f7;color:#53627c;border-radius:6px;padding:3px 9px}.status.blocked{background:#fff0ee;color:#a13730}.fileline{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:18px}.mockfooter{font-size:16px;color:#65728a;padding:0 24px 18px}.appmock hr{border:0;border-top:1px solid #e3e7ef;margin:22px 0}.stategrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.statecard{background:#fafbfe;border:1px solid #dce2eb;border-radius:12px;padding:18px}.statecard b{color:#4a369c}footer{color:#5b687f;padding:16px 4px 40px}.footlinks{display:flex;gap:20px;flex-wrap:wrap}code{font-size:16px;background:#f1f3f7;padding:2px 4px}pre{white-space:pre-wrap}
+@media(max-width:950px){.map,.compare{grid-template-columns:1fr}.map .visual{order:0}.map .panels{order:1;position:static}.stats{grid-template-columns:1fr 1fr}.appgrid{gap:12px;padding:14px}.appcard{padding:18px}}
+@media(max-width:620px){main{padding:16px 10px}header,section{padding:20px 16px;border-radius:14px}h1{font-size:32px}.lead{font-size:18px}.appgrid{grid-template-columns:1fr}.appintro{padding:20px}.appintro h3{font-size:25px}.appbar{padding:14px}.stategrid{grid-template-columns:1fr}.goal{padding:10px 14px}.stats{gap:8px}.stat{padding:12px}.diagram{min-width:580px}.visual,.flowwrap{overflow-x:auto}.flowwrap svg{min-width:650px}.panel{scroll-margin-top:135px}}
+@media print{.goal,.panels{position:static}.panel{display:block!important}.map,.compare{display:block}.appmock{box-shadow:none}section{break-inside:avoid}}
+</style></head><body><div class="goal">최종 목표: 과제 조건을 지키는 화면과 오픈소스를 고르고 구현·검증 순서를 확인한다.</div><main><header><span class="kicker">FLOW ASSIGNMENT / EASY GUIDE</span><h1>파일 업로드 화면, 쉽게 고르기</h1><p class="lead">화면은 Ant Design을 중심으로 제안하고,<br>안전한 저장과 검증의 책임을 분리합니다.</p><div class="badges"><span class="badge">조사 완료</span><span class="badge">예상 화면</span><span class="badge">앱 구현 미착수</span></div><nav class="jump"><a href="#gui">예상 화면 보기</a><a href="#relations">클릭형 관계도</a><a href="#research">리서치와 적용 근거</a></nav><div class="stats"><div class="stat"><b>10</b><span>오픈소스 레퍼런스</span></div><div class="stat"><b>108</b><span>기존 점검 항목 연결</span></div><div class="stat"><b>28</b><span>앱 시험 계획 · 미실행</span></div><div class="stat"><b>2</b><span>정책 / 업로드 구역</span></div></div></header><section id="start"><h2>먼저 알아둘 세 가지</h2><ol><li>고정 7종 미선택과 커스텀 20자·200개 조건을 먼저 지킵니다.</li><li>자료 10개에서 가져올 부분과 수정·제외할 부분을 구분합니다.</li><li>예상 화면을 확인하고 실제 구현·28개 시험·증거 기록으로 이어갑니다.</li></ol><p><b>다음 행동 하나:</b> 정책 선택부터 서버 저장까지 첫 기능을 연결합니다.</p><p>지금 나는 전체 목표 중 <b>① 화면 선택</b>의 조사·예상 모형 단계에 있습니다.</p><p class="hint">이번에는 화면 선택을 깊게 봅니다. ② 시스템 연결 ③ 실제 시험 ④ 기록·제출은 기존 가이드와 연결합니다. 속도·성능 개선은 아직 측정하지 않았습니다.</p></section><section id="gui"><p class="kicker">EXPECTED GUI</p><h2>완성 후 보게 될 화면</h2><p><b>실제 캡처가 아닌 개선 예상 모형</b>입니다. 서버에 연결되지 않으며 버튼 그림은 파일을 전송하지 않습니다.</p><div class="appmock" role="img" aria-label="최초 상태 예상 화면"><div class="appbar"><b>파일 업로드 정책</b><span class="status">예상 모형</span></div><div class="appintro"><h3>파일을 보내기 전에,<br>차단 규칙부터 확인하세요.</h3><p>선택한 확장자는 파일 전송 시 서버에서 확인합니다.</p></div><div class="appgrid"><div class="appcard"><div class="cardhead"><b>01 차단 정책</b><span class="status">초기 상태</span></div><p><b>고정 확장자</b></p><div class="fixed"><span class="check "><span class="square"></span>bat</span><span class="check "><span class="square"></span>cmd</span><span class="check "><span class="square"></span>com</span><span class="check "><span class="square"></span>cpl</span><span class="check "><span class="square"></span>exe</span><span class="check "><span class="square"></span>scr</span><span class="check "><span class="square"></span>js</span></div><p class="muted">처음에는 모두 미선택입니다.</p><hr><div class="cardhead"><b>커스텀 확장자</b><span>0/200</span></div><div class="inputrow"><span class="fakeinput">확장자 입력</span><span class="fakebutton">추가</span></div><p class="muted">최대 20자 · 같은 값은 한 번만</p><div class="chips"><p class="muted">추가한 확장자가 없습니다.</p></div></div><div class="appcard"><div class="cardhead"><b>02 파일 업로드</b><span class="status">파일 미선택</span></div><div class="dropbox"><span class="filemark"></span><b>파일을 선택하세요</b><span>또는 이곳으로 끌어 놓으세요</span><span class="fakebutton outline">파일 선택</span></div><p class="muted">1개 · 최대 10 MiB 제안 / 미확정</p><span class="fakebutton wide disabled">파일을 먼저 선택하세요</span><div class="notice neutral">파일을 선택한 뒤 보내기를 눌러주세요.</div></div></div><p class="mockfooter">저장·업로드 기능이 없는 예상 화면입니다.</p></div></section><section id="beforeafter"><h2>Before / After</h2><div class="compare"><div><h3>Before · 현재 구성도</h3><div class="before"><b>앱 소스 없음 · 실제 화면 없음</b><p>가이드만 작성된 상태를 설명하는 그림입니다.</p><div class="block">규칙을 고를 자리<div class="line"></div></div><div class="block">파일을 보낼 자리<div class="line"></div></div></div></div><div><h3>After · 개선 예상 구성</h3><div class="before" style="border-style:solid;border-color:#b1a3db"><b>01 정책 / 02 업로드</b><p>처음: 7개 모두 미선택, 0/200</p><div class="block">선택 → 저장 결과 확인</div><div class="block">파일 선택 → 보내기 → 서버 판정</div><p>성공·차단·실패의 이유를 분리합니다.</p></div></div></div><h3>사용자가 규칙을 바꾼 뒤의 예시</h3><p>사용자가 exe·scr를 선택하고 sh를 추가한 장면입니다. 자동 선택되는 기본값이 아닙니다.</p><div class="appmock" role="img" aria-label="사용자 변경 후 차단 예시 예상 화면"><div class="appbar"><b>파일 업로드 정책</b><span class="status">예상 모형</span></div><div class="appintro"><h3>파일을 보내기 전에,<br>차단 규칙부터 확인하세요.</h3><p>선택한 확장자는 파일 전송 시 서버에서 확인합니다.</p></div><div class="appgrid"><div class="appcard"><div class="cardhead"><b>01 차단 정책</b><span class="status">저장 완료 예시</span></div><p><b>고정 확장자</b></p><div class="fixed"><span class="check "><span class="square"></span>bat</span><span class="check "><span class="square"></span>cmd</span><span class="check "><span class="square"></span>com</span><span class="check "><span class="square"></span>cpl</span><span class="check on"><span class="square"></span>exe</span><span class="check on"><span class="square"></span>scr</span><span class="check "><span class="square"></span>js</span></div><p class="muted">처음에는 모두 미선택입니다.</p><hr><div class="cardhead"><b>커스텀 확장자</b><span>1/200</span></div><div class="inputrow"><span class="fakeinput">확장자 입력</span><span class="fakebutton">추가</span></div><p class="muted">최대 20자 · 같은 값은 한 번만</p><div class="chips"><span class="chip">sh <span>×</span></span></div></div><div class="appcard"><div class="cardhead"><b>02 파일 업로드</b><span class="status">결과 예시</span></div><div class="dropbox"><span class="filemark"></span><b>파일을 선택하세요</b><span>또는 이곳으로 끌어 놓으세요</span><span class="fakebutton outline">파일 선택</span></div><p class="muted">1개 · 최대 10 MiB 제안 / 미확정</p><span class="fakebutton wide ">다른 파일 선택</span><div class="fileline"><b>setup.exe</b><span class="status blocked">차단됨</span></div><div class="notice danger"><b>업로드할 수 없습니다.</b><br>현재 규칙에서 exe 확장자를 차단하고 있습니다.<br>최종 저장되지 않았습니다.</div></div></div><p class="mockfooter">저장·업로드 기능이 없는 예상 화면입니다.</p></div></section><section id="states"><h2>실패할 때도 화면을 준비하기</h2><div class="stategrid"><article class="statecard"><b>기본 상태</b><p>고정 7개 미선택 · 커스텀 0/200 · 파일 없음</p><p class="notice neutral">보낼 파일을 선택하세요.</p></article><article class="statecard"><b>저장 중</b><p>선택 요청 처리 중·중복 클릭 제한</p><p class="notice neutral">규칙을 저장하고 있습니다.</p></article><article class="statecard"><b>저장 실패</b><p>이전 선택과 입력값 유지</p><p class="notice neutral">저장하지 못했습니다. 연결을 확인하고 다시 시도하세요.</p></article><article class="statecard"><b>중복·최대 개수</b><p>같은 값·201번째 입력 거부</p><p class="notice neutral">이미 추가한 값입니다. / 최대 200개까지 추가할 수 있습니다.</p></article><article class="statecard"><b>차단 예시</b><p>사용자가 exe를 선택한 뒤 setup.exe 전송</p><p class="notice neutral">현재 규칙에서 exe 확장자를 차단하고 있습니다.</p></article><article class="statecard"><b>성공 예시</b><p>허용된 파일이 실제 저장 완료</p><p class="notice neutral">업로드가 완료되었습니다.</p></article><article class="statecard"><b>다른 탭 충돌</b><p>이전 버전으로 수정한 요청 거부</p><p class="notice neutral">다른 화면에서 규칙이 바뀌었습니다. 최신 규칙을 확인하세요.</p></article></div></section><section id="process"><h2>해결 진행 플로우차트</h2><p>앞으로 구현·검증할 순서입니다. 보고서 완료와 앱 시험 통과는 다른 상태입니다.</p><div class="flowwrap"><svg viewBox="0 0 780 710" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="구현과 검증 진행 흐름"><title>구현과 검증 진행 흐름</title><defs><marker id="work-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#75809c"/></marker></defs><path d="M385 84V120" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M385 184V230" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M300 300V325H170V350" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M480 300V325H600V350" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M600 420V480" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M450 515H170V420" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M600 550V610" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><path d="M170 350V152H210" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#work-arrow)"/><g><rect x="210" y="20" width="350" height="64" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="385.0" y="48" text-anchor="middle" class="svgt">정책 제안 검토</text><text x="385.0" y="72" text-anchor="middle" class="svgs">사용자 · 다음 단계</text></g><g><rect x="210" y="120" width="350" height="64" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="385.0" y="148" text-anchor="middle" class="svgt">DB·서버·화면 구현</text><text x="385.0" y="172" text-anchor="middle" class="svgs">개발 · 미착수</text></g><g><rect x="210" y="230" width="350" height="70" rx="14" fill="#fff6e4" stroke="#aab5ce"/><text x="385.0" y="258" text-anchor="middle" class="svgt">필수·예외 시험 통과?</text><text x="385.0" y="282" text-anchor="middle" class="svgs">개발 · 미실행</text></g><g><rect x="20" y="350" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="170.0" y="378" text-anchor="middle" class="svgt">원인 한 개 수정</text><text x="170.0" y="402" text-anchor="middle" class="svgs">구현으로 돌아가기</text></g><g><rect x="450" y="350" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="600.0" y="378" text-anchor="middle" class="svgt">재시작·공개 접속 확인</text><text x="600.0" y="402" text-anchor="middle" class="svgs">통과 뒤 · 미실행</text></g><g><rect x="450" y="480" width="300" height="70" rx="14" fill="#fff6e4" stroke="#aab5ce"/><text x="600.0" y="508" text-anchor="middle" class="svgt">실제 증거가 있는가?</text><text x="600.0" y="532" text-anchor="middle" class="svgs">완료 판단</text></g><g><rect x="450" y="610" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="600.0" y="638" text-anchor="middle" class="svgt">문서·AI 기록 후 제출</text><text x="600.0" y="662" text-anchor="middle" class="svgs">마지막 단계</text></g><text x="165" y="336" class="svgs">아니오</text><text x="600" y="336" class="svgs">예</text><text x="230" y="500" class="svgs">없음</text><text x="615" y="585" class="svgs">있음</text></svg></div></section><section><h2>실제 파일 전송에서 확인할 순서</h2><div class="flowwrap"><svg viewBox="0 0 780 710" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="예상 파일 전송 흐름"><title>예상 파일 전송 흐름</title><defs><marker id="up-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#75809c"/></marker></defs><path d="M385 84V120" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M385 184V230" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M300 300V325H170V350" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M480 300V325H600V350" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M600 420V480" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M450 515H170V610" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><path d="M600 550V610" fill="none" stroke="#75809c" stroke-width="2.5" marker-end="url(#up-arrow)"/><g><rect x="210" y="20" width="350" height="64" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="385.0" y="48" text-anchor="middle" class="svgt">파일 선택 → 보내기</text><text x="385.0" y="72" text-anchor="middle" class="svgs">사용자 · 미구현</text></g><g><rect x="210" y="120" width="350" height="64" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="385.0" y="148" text-anchor="middle" class="svgt">파일·최신 정책 검사</text><text x="385.0" y="172" text-anchor="middle" class="svgs">서버 · 미구현</text></g><g><rect x="210" y="230" width="350" height="70" rx="14" fill="#fff6e4" stroke="#aab5ce"/><text x="385.0" y="258" text-anchor="middle" class="svgt">차단·입력 오류인가?</text><text x="385.0" y="282" text-anchor="middle" class="svgs">판단</text></g><g><rect x="20" y="350" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="170.0" y="378" text-anchor="middle" class="svgt">이유 안내</text><text x="170.0" y="402" text-anchor="middle" class="svgs">최종 저장하지 않음</text></g><g><rect x="450" y="350" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="600.0" y="378" text-anchor="middle" class="svgt">파일 보관·DB 상태 확인</text><text x="600.0" y="402" text-anchor="middle" class="svgs">허용 후보</text></g><g><rect x="450" y="480" width="300" height="70" rx="14" fill="#fff6e4" stroke="#aab5ce"/><text x="600.0" y="508" text-anchor="middle" class="svgt">저장 완료인가?</text><text x="600.0" y="532" text-anchor="middle" class="svgs">판단</text></g><g><rect x="20" y="610" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="170.0" y="638" text-anchor="middle" class="svgt">실패 안내·잔여 파일 정리</text><text x="170.0" y="662" text-anchor="middle" class="svgs">저장 오류</text></g><g><rect x="450" y="610" width="300" height="70" rx="14" fill="#edf1fc" stroke="#aab5ce"/><text x="600.0" y="638" text-anchor="middle" class="svgt">업로드 성공 표시</text><text x="600.0" y="662" text-anchor="middle" class="svgs">저장 완료 확인 뒤</text></g><text x="170" y="336" class="svgs">예</text><text x="590" y="336" class="svgs">아니오</text><text x="220" y="500" class="svgs">아니오</text><text x="615" y="585" class="svgs">예</text></svg></div></section><section id="relations"><h2>레퍼런스와 적용 위치 관계도</h2><p>오른쪽 번호를 누르면 왼쪽 설명이 바뀝니다. 키보드로 이동한 뒤 Enter를 눌러도 됩니다. 좁은 화면에서는 그림 다음에 설명이 나옵니다.</p><div class="map"><div class="panels"><article id="n1" class="panel default"><p class="selected">선택한 항목: ① 화면 구성</p><p class="crumb">전체 목표 → 화면과 시스템 연결 → ① 화면 구성</p><h3>① 화면 구성</h3><p><b>현재 문제</b><br>선택·추가·파일 보내기를 찾기 어렵거나 규칙 저장 상태가 불명확합니다.</p><p><b>내가 할 일</b><br>7개 모두 비어 있는지 보고 하나를 선택한 뒤 새로고침해 확인합니다.</p><p><b>도우미에게 부탁할 말</b></p><p class="request">7개 모두 비어 있는지 보고 하나를 선택한 뒤 새로고침해 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.</p><p><b>끝났는지 확인</b><br>초기 미선택·새로고침 유지·입력 오류·키보드 사용 결과.</p><p><b>실패하면</b><br>저장 완료 표시를 멈추고 실패한 입력 또는 요청 한 개부터 확인합니다.</p><p><a href="https://github.com/ant-design/ant-design">R01 ant-design/ant-design</a> / <a href="https://github.com/shadcn-ui/ui">R02 shadcn-ui/ui</a> / <a href="https://github.com/react-dropzone/react-dropzone">R03 react-dropzone/react-dropzone</a></p><a href="#relations">관계도 처음으로</a></article><article id="n2" class="panel "><p class="selected">선택한 항목: ② 저장 상태 맞추기</p><p class="crumb">전체 목표 → 화면과 시스템 연결 → ② 저장 상태 맞추기</p><h3>② 저장 상태 맞추기</h3><p><b>현재 문제</b><br>저장에 실패했는데 체크 표시만 바뀌면 화면과 실제 규칙이 달라집니다.</p><p><b>내가 할 일</b><br>저장 중에는 기다리고 실패하면 이전 선택과 입력이 남는지 확인합니다.</p><p><b>도우미에게 부탁할 말</b></p><p class="request">저장 중에는 기다리고 실패하면 이전 선택과 입력이 남는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.</p><p><b>끝났는지 확인</b><br>로딩·실패·완료·다른 탭 충돌에서 화면과 실제 DB 비교.</p><p><b>실패하면</b><br>전송을 반복하기 전에 실제 반영 여부를 조회합니다.</p><p><a href="https://github.com/TanStack/query">R04 TanStack/query</a></p><a href="#relations">관계도 처음으로</a></article><article id="n3" class="panel "><p class="selected">선택한 항목: ③ 서버 검증</p><p class="crumb">전체 목표 → 화면과 시스템 연결 → ③ 서버 검증</p><h3>③ 서버 검증</h3><p><b>현재 문제</b><br>화면에서만 막으면 직접 보낸 요청이 차단을 우회할 수 있습니다.</p><p><b>내가 할 일</b><br>차단 파일은 이유를 보여주고 허용 파일은 실제 보관되는지 확인합니다.</p><p><b>도우미에게 부탁할 말</b></p><p class="request">차단 파일은 이유를 보여주고 허용 파일은 실제 보관되는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.</p><p><b>끝났는지 확인</b><br>직접 요청 차단·정상 파일 저장·경로 조작 거부·재시작 유지.</p><p><b>실패하면</b><br>201 응답을 멈추고 임시 파일과 DB 저장 상태를 대조합니다.</p><p><a href="https://github.com/spring-guides/gs-uploading-files">R05 spring-guides/gs-uploading-files</a> / <a href="https://github.com/OWASP/CheatSheetSeries">R10 OWASP/CheatSheetSeries</a></p><a href="#relations">관계도 처음으로</a></article><article id="n4" class="panel "><p class="selected">선택한 항목: ④ 데이터 일치</p><p class="crumb">전체 목표 → 화면과 시스템 연결 → ④ 데이터 일치</p><h3>④ 데이터 일치</h3><p><b>현재 문제</b><br>목록이 199개일 때 요청 두 개가 동시에 오면 201개가 될 수 있습니다.</p><p><b>내가 할 일</b><br>같은 값은 한 개만 남고 동시에 추가해도 200개를 넘지 않는지 확인합니다.</p><p><b>도우미에게 부탁할 말</b></p><p class="request">같은 값은 한 개만 남고 동시에 추가해도 200개를 넘지 않는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.</p><p><b>끝났는지 확인</b><br>초기값·중복 한 건·최종 200개·롤백·충돌의 실제 DB 결과.</p><p><b>실패하면</b><br>문제 요청을 롤백하고 모든 쓰기가 같은 잠금 순서를 따르는지 확인합니다.</p><p><a href="https://github.com/flyway/flyway">R06 flyway/flyway</a> / <a href="https://github.com/testcontainers/testcontainers-java">R07 testcontainers/testcontainers-java</a></p><a href="#relations">관계도 처음으로</a></article><article id="n5" class="panel "><p class="selected">선택한 항목: ⑤ 배포와 화면 시험</p><p class="crumb">전체 목표 → 화면과 시스템 연결 → ⑤ 배포와 화면 시험</p><h3>⑤ 배포와 화면 시험</h3><p><b>현재 문제</b><br>예쁜 화면이어도 재시작 후 파일이 사라지거나 실제 차단이 실패할 수 있습니다.</p><p><b>내가 할 일</b><br>재시작 뒤 선택과 파일이 남는지 보고 성공·차단·실패 화면을 확인합니다.</p><p><b>도우미에게 부탁할 말</b></p><p class="request">재시작 뒤 선택과 파일이 남는지 보고 성공·차단·실패 화면을 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.</p><p><b>끝났는지 확인</b><br>재생성 전후 DB·파일 비교, 실제 시험 명령·커밋, 공개 URL 결과.</p><p><b>실패하면</b><br>새 배포 전환을 멈추고 기존 데이터와 이전 이미지를 보존합니다.</p><p><a href="https://github.com/microsoft/playwright">R08 microsoft/playwright</a> / <a href="https://github.com/docker/awesome-compose">R09 docker/awesome-compose</a></p><a href="#relations">관계도 처음으로</a></article></div><div class="visual diagram"><svg viewBox="0 0 650 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="레퍼런스와 적용 위치 관계도"><title>레퍼런스와 적용 위치 관계도</title><defs><marker id="ref-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#75809c"/></marker></defs><text x="22" y="30" class="svgt">확인한 자료</text><text x="375" y="30" class="svgt">눌러서 설명 보기</text><rect x="8" y="65" width="316" height="94" rx="14" fill="#f5f6fa" stroke="#ccd4e3"/><text x="24" y="99" class="svgs">R01 Ant Design</text><text x="24" y="130" class="svgs">R02·R03 대안</text><path d="M324 112H355" stroke="#75809c" stroke-width="2.5" marker-end="url(#ref-arrow)"/><a href="#n1" tabindex="0" aria-label="① 화면 구성 상세 보기"><rect x="365" y="65" width="278" height="94" rx="14" fill="#efecff" stroke="#a99cd9"/><text x="383" y="104" class="svgt">① 화면 구성</text><text x="383" y="133" class="svgs">선택하면 설명 변경</text></a><rect x="8" y="195" width="316" height="94" rx="14" fill="#f5f6fa" stroke="#ccd4e3"/><text x="24" y="229" class="svgs">R04 TanStack Query</text><text x="24" y="260" class="svgs">저장 뒤 다시 조회</text><path d="M324 242H355" stroke="#75809c" stroke-width="2.5" marker-end="url(#ref-arrow)"/><a href="#n2" tabindex="0" aria-label="② 저장 상태 맞추기 상세 보기"><rect x="365" y="195" width="278" height="94" rx="14" fill="#efecff" stroke="#a99cd9"/><text x="383" y="234" class="svgt">② 저장 상태 맞추기</text><text x="383" y="263" class="svgs">선택하면 설명 변경</text></a><rect x="8" y="325" width="316" height="94" rx="14" fill="#f5f6fa" stroke="#ccd4e3"/><text x="24" y="359" class="svgs">R05 Spring + R10 OWASP</text><text x="24" y="390" class="svgs">파일 검사·보관</text><path d="M324 372H355" stroke="#75809c" stroke-width="2.5" marker-end="url(#ref-arrow)"/><a href="#n3" tabindex="0" aria-label="③ 서버 검증 상세 보기"><rect x="365" y="325" width="278" height="94" rx="14" fill="#efecff" stroke="#a99cd9"/><text x="383" y="364" class="svgt">③ 서버 검증</text><text x="383" y="393" class="svgs">선택하면 설명 변경</text></a><rect x="8" y="455" width="316" height="94" rx="14" fill="#f5f6fa" stroke="#ccd4e3"/><text x="24" y="489" class="svgs">R06 Flyway + R07 Testcontainers</text><text x="24" y="520" class="svgs">초기값·실제 DB 시험</text><path d="M324 502H355" stroke="#75809c" stroke-width="2.5" marker-end="url(#ref-arrow)"/><a href="#n4" tabindex="0" aria-label="④ 데이터 일치 상세 보기"><rect x="365" y="455" width="278" height="94" rx="14" fill="#efecff" stroke="#a99cd9"/><text x="383" y="494" class="svgt">④ 데이터 일치</text><text x="383" y="523" class="svgs">선택하면 설명 변경</text></a><rect x="8" y="585" width="316" height="94" rx="14" fill="#f5f6fa" stroke="#ccd4e3"/><text x="24" y="619" class="svgs">R08 Playwright + R09 Docker</text><text x="24" y="650" class="svgs">화면 시험·재시작</text><path d="M324 632H355" stroke="#75809c" stroke-width="2.5" marker-end="url(#ref-arrow)"/><a href="#n5" tabindex="0" aria-label="⑤ 배포와 화면 시험 상세 보기"><rect x="365" y="585" width="278" height="94" rx="14" fill="#efecff" stroke="#a99cd9"/><text x="383" y="624" class="svgt">⑤ 배포와 화면 시험</text><text x="383" y="653" class="svgs">선택하면 설명 변경</text></a></svg></div></div></section><section id="research"><p class="hint">집계 정정: 이전 답변의 123개는 재등장한 번호를 포함한 집계였으며, 고유 점검 항목은 108개입니다. 28개 시험 계획은 변동 없습니다.</p><h2>리서치 결과·적용 근거</h2><h1>쉬운판: 파일 업로드 화면과 레퍼런스</h1>
+<p>작성일: 2026-10-23 · 문서 ID: flow-ui-research-20261023-105551</p>
+<blockquote>
+<p>최종 목표: 과제 조건을 지키는 화면과 오픈소스를 고르고 구현·검증 순서를 확인한다.</p>
+</blockquote>
+<p><strong>핵심 한 줄:</strong> Ant Design 중심 화면을 제안하고 안전한 저장·데이터 일치·재시작 검증을 각각의 참고 자료와 연결합니다.</p>
+<p>다음 행동 하나: 정책 선택 → 서버 저장 → 새로고침 유지의 첫 기능을 연결합니다.</p>
+<h2>3줄 줄거리</h2>
+<ol>
+<li>고정 7종 미선택과 커스텀 20자·200개 조건을 먼저 지킵니다.</li>
+<li>자료 10개에서 가져올 부분과 수정·제외할 부분을 구분합니다.</li>
+<li>예상 화면을 확인하고 실제 구현·28개 시험·증거 기록으로 이어갑니다.</li>
+</ol>
+<h2>현재 위치와 가설 검증</h2>
+<p>4개 파트는 ① 화면 선택 ② 시스템 연결 ③ 실제 시험 ④ 기록·제출입니다. 이번에 깊게 본 파트는 <strong>① 정책·업로드 화면 선택</strong>입니다. 다른 파트는 기존 108개 점검 항목에 참고 자료와 다음 검증을 연결했습니다.</p>
+<p>확인: 저장소에는 문서가 있고 앱 소스는 없습니다. 공식 저장소 10개와 관련 자료를 확인했습니다.</p>
+<p>아직 모르는 것: 이 구성이 실제 개발 시간을 줄이고 실수 없이 쓰기 쉬운지.</p>
+<p>확인하는 방법: 첫 기능에서 저장 실패·새로고침·키보드·좁은 화면을 시험합니다. 시간·성능·번들 용량 개선은 측정하지 않았습니다.</p>
+<h2>효율성·안정성·심미성 비교</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>후보</th>
+<th>효율성 관점</th>
+<th>안정성 관점</th>
+<th>심미성 관점</th>
+<th>판정</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ant Design</td>
+<td>선택·입력·태그·업로드·안내를 한 구성으로 조합</td>
+<td>상태와 접근성 동작 참고; 서버 검증은 별도</td>
+<td>색·간격을 한 기준으로 맞춤</td>
+<td>우선 제안</td>
+</tr>
+<tr>
+<td>shadcn/ui</td>
+<td>필요한 소스를 직접 조합·수정</td>
+<td>코드 소유에 따른 업데이트·검수 책임</td>
+<td>여백·테두리·선택 표시를 세밀히 조정</td>
+<td>대안·디자인 참고</td>
+</tr>
+<tr>
+<td>react-dropzone</td>
+<td>별도 드롭존이 필요할 때만 사용</td>
+<td>전송·DB 정책을 제공하지 않음</td>
+<td>사용자가 직접 모양 구성</td>
+<td>초기 보류 / 중복 도입 회피</td>
+</tr>
+</tbody>
+</table></div>
+<p>위 판정은 이 과제에 대한 설계 의견입니다. 패키지 설치·호환·성능·사용성 시험은 아직 하지 않았습니다. 유사 기능의 UI 패키지를 중복 설치하지 않는 방향을 권장합니다.</p>
+<h2>화면 요소와 과제 조건</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>요소</th>
+<th>지킬 조건</th>
+<th>상태</th>
+<th>배치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>고정 선택</td>
+<td>처음 7개 모두 미선택</td>
+<td>저장 중 / 완료 / 실패</td>
+<td>정책 카드 상단</td>
+</tr>
+<tr>
+<td>커스텀 추가</td>
+<td>20자·200개·중복 방지</td>
+<td>입력값 유지·근처 오류</td>
+<td>현재 개수 / 200과 추가 버튼</td>
+</tr>
+<tr>
+<td>파일 선택</td>
+<td>고르기와 보내기 구분</td>
+<td>미선택 / 선택 / 전송 중</td>
+<td>업로드 카드</td>
+</tr>
+<tr>
+<td>업로드 결과</td>
+<td>서버 저장 완료 뒤 성공</td>
+<td>성공 / 차단 / 저장 실패</td>
+<td>색과 문구 함께 사용</td>
+</tr>
+<tr>
+<td>충돌</td>
+<td>오래된 정책 저장 거부</td>
+<td>최신 규칙 다시 보기</td>
+<td>기존 입력 보존</td>
+</tr>
+<tr>
+<td>모바일·키보드</td>
+<td>읽기·초점 순서 유지</td>
+<td>정책 다음 업로드</td>
+<td>본문 16px 이상·버튼 44px 제안</td>
+</tr>
+</tbody>
+</table></div>
+<h2>해결 진행 플로우차트</h2>
+<p>개발·앱 시험은 앞으로 할 계획입니다.</p>
+<p>그림은 위 플로우차트·관계도에서 확인할 수 있습니다.</p>
+
+<h2>예상 서비스의 업로드 흐름</h2>
+<p>개발·앱 시험은 앞으로 할 계획입니다.</p>
+<p>그림은 위 플로우차트·관계도에서 확인할 수 있습니다.</p>
+
+<h2>레퍼런스 관계도</h2>
+<p>개발·앱 시험은 앞으로 할 계획입니다.</p>
+<p>그림은 위 플로우차트·관계도에서 확인할 수 있습니다.</p>
+
+<h2>번호별 행동 지도</h2>
+<p><a id="md-n1"></a></p>
+<h3>① 화면 구성</h3>
+<p>현재 위치: 전체 목표 → 화면과 시스템 연결 → ① 화면 구성.</p>
+<p>현재 문제: 선택·추가·파일 보내기를 찾기 어렵거나 규칙 저장 상태가 불명확합니다.</p>
+<p>내가 할 일: 7개 모두 비어 있는지 보고 하나를 선택한 뒤 새로고침해 확인합니다.</p>
+<p>도우미에게 부탁할 말: “7개 모두 비어 있는지 보고 하나를 선택한 뒤 새로고침해 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.”</p>
+<p>끝났는지 확인: 초기 미선택·새로고침 유지·입력 오류·키보드 사용 결과.</p>
+<p>실패하면: 저장 완료 표시를 멈추고 실패한 입력 또는 요청 한 개부터 확인합니다.</p>
+<p>참고: <a href="https://github.com/ant-design/ant-design">R01 ant-design/ant-design</a>, <a href="https://github.com/shadcn-ui/ui">R02 shadcn-ui/ui</a>, <a href="https://github.com/react-dropzone/react-dropzone">R03 react-dropzone/react-dropzone</a></p>
+<p><a id="md-n2"></a></p>
+<h3>② 저장 상태 맞추기</h3>
+<p>현재 위치: 전체 목표 → 화면과 시스템 연결 → ② 저장 상태 맞추기.</p>
+<p>현재 문제: 저장에 실패했는데 체크 표시만 바뀌면 화면과 실제 규칙이 달라집니다.</p>
+<p>내가 할 일: 저장 중에는 기다리고 실패하면 이전 선택과 입력이 남는지 확인합니다.</p>
+<p>도우미에게 부탁할 말: “저장 중에는 기다리고 실패하면 이전 선택과 입력이 남는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.”</p>
+<p>끝났는지 확인: 로딩·실패·완료·다른 탭 충돌에서 화면과 실제 DB 비교.</p>
+<p>실패하면: 전송을 반복하기 전에 실제 반영 여부를 조회합니다.</p>
+<p>참고: <a href="https://github.com/TanStack/query">R04 TanStack/query</a></p>
+<p><a id="md-n3"></a></p>
+<h3>③ 서버 검증</h3>
+<p>현재 위치: 전체 목표 → 화면과 시스템 연결 → ③ 서버 검증.</p>
+<p>현재 문제: 화면에서만 막으면 직접 보낸 요청이 차단을 우회할 수 있습니다.</p>
+<p>내가 할 일: 차단 파일은 이유를 보여주고 허용 파일은 실제 보관되는지 확인합니다.</p>
+<p>도우미에게 부탁할 말: “차단 파일은 이유를 보여주고 허용 파일은 실제 보관되는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.”</p>
+<p>끝났는지 확인: 직접 요청 차단·정상 파일 저장·경로 조작 거부·재시작 유지.</p>
+<p>실패하면: 201 응답을 멈추고 임시 파일과 DB 저장 상태를 대조합니다.</p>
+<p>참고: <a href="https://github.com/spring-guides/gs-uploading-files">R05 spring-guides/gs-uploading-files</a>, <a href="https://github.com/OWASP/CheatSheetSeries">R10 OWASP/CheatSheetSeries</a></p>
+<p><a id="md-n4"></a></p>
+<h3>④ 데이터 일치</h3>
+<p>현재 위치: 전체 목표 → 화면과 시스템 연결 → ④ 데이터 일치.</p>
+<p>현재 문제: 목록이 199개일 때 요청 두 개가 동시에 오면 201개가 될 수 있습니다.</p>
+<p>내가 할 일: 같은 값은 한 개만 남고 동시에 추가해도 200개를 넘지 않는지 확인합니다.</p>
+<p>도우미에게 부탁할 말: “같은 값은 한 개만 남고 동시에 추가해도 200개를 넘지 않는지 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.”</p>
+<p>끝났는지 확인: 초기값·중복 한 건·최종 200개·롤백·충돌의 실제 DB 결과.</p>
+<p>실패하면: 문제 요청을 롤백하고 모든 쓰기가 같은 잠금 순서를 따르는지 확인합니다.</p>
+<p>참고: <a href="https://github.com/flyway/flyway">R06 flyway/flyway</a>, <a href="https://github.com/testcontainers/testcontainers-java">R07 testcontainers/testcontainers-java</a></p>
+<p><a id="md-n5"></a></p>
+<h3>⑤ 배포와 화면 시험</h3>
+<p>현재 위치: 전체 목표 → 화면과 시스템 연결 → ⑤ 배포와 화면 시험.</p>
+<p>현재 문제: 예쁜 화면이어도 재시작 후 파일이 사라지거나 실제 차단이 실패할 수 있습니다.</p>
+<p>내가 할 일: 재시작 뒤 선택과 파일이 남는지 보고 성공·차단·실패 화면을 확인합니다.</p>
+<p>도우미에게 부탁할 말: “재시작 뒤 선택과 파일이 남는지 보고 성공·차단·실패 화면을 확인합니다. 실패한 경우도 보여주고 실제 저장 결과를 확인해줘.”</p>
+<p>끝났는지 확인: 재생성 전후 DB·파일 비교, 실제 시험 명령·커밋, 공개 URL 결과.</p>
+<p>실패하면: 새 배포 전환을 멈추고 기존 데이터와 이전 이미지를 보존합니다.</p>
+<p>참고: <a href="https://github.com/microsoft/playwright">R08 microsoft/playwright</a>, <a href="https://github.com/docker/awesome-compose">R09 docker/awesome-compose</a></p>
+<h2>오픈소스 레퍼런스 10개</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>번호·자료</th>
+<th>어디에 쓸까</th>
+<th>선택 상태</th>
+<th>사용 조건 표기</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ant-design/ant-design">R01 ant-design/ant-design</a></td>
+<td>체크칸·추가칸·파일 보내기·오류 안내를 같은 모양으로 만듭니다.</td>
+<td>도입 권장</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/shadcn-ui/ui">R02 shadcn-ui/ui</a></td>
+<td>여백과 선택 표시가 또렷한 화면을 만드는 비교 자료입니다.</td>
+<td>대안·디자인 참고</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/react-dropzone/react-dropzone">R03 react-dropzone/react-dropzone</a></td>
+<td>파일을 끌어 놓는 칸을 만들지만 저장이나 차단은 대신하지 않습니다.</td>
+<td>초기 도입 보류</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/TanStack/query">R04 TanStack/query</a></td>
+<td>저장이 끝난 뒤 최신 목록을 다시 받아 화면과 실제 값을 맞춥니다.</td>
+<td>상태 관리 도입 후보</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/spring-guides/gs-uploading-files">R05 spring-guides/gs-uploading-files</a></td>
+<td>파일을 받는 부분과 보관하는 부분을 나누는 참고 자료입니다.</td>
+<td>구조만 수정 적용</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/flyway/flyway">R06 flyway/flyway</a></td>
+<td>처음 필요한 저장 칸을 만들고 이후 변경을 순서대로 남깁니다.</td>
+<td>마이그레이션 도입 후보</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/testcontainers/testcontainers-java">R07 testcontainers/testcontainers-java</a></td>
+<td>여러 사람이 동시에 바꿔도 목록이 어긋나지 않는지 시험합니다.</td>
+<td>통합 시험 도입 후보</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><a href="https://github.com/microsoft/playwright">R08 microsoft/playwright</a></td>
+<td>버튼과 파일 선택이 예상대로 보이는지 브라우저에서 확인합니다.</td>
+<td>화면 시험 도입 후보</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/docker/awesome-compose">R09 docker/awesome-compose</a></td>
+<td>화면·서버·저장소를 함께 켜고 다시 켜도 자료가 남도록 준비합니다.</td>
+<td>구성 수정 적용</td>
+<td>CC0-1.0</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OWASP/CheatSheetSeries">R10 OWASP/CheatSheetSeries</a></td>
+<td>이름만 확인하는 것 외에 크기와 보관 방법도 함께 점검합니다.</td>
+<td>보안 점검 근거</td>
+<td>CC-BY-SA-4.0</td>
+</tr>
+</tbody>
+</table></div>
+<h2>그대로 가져오지 않을 부분</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>문제</th>
+<th>과제 적용</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spring 예제</td>
+<td>시작 시 보관 폴더 전체 삭제</td>
+<td>시작 때 삭제하지 않고 UUID 기반 보관으로 변경</td>
+</tr>
+<tr>
+<td>Ant Design 예제</td>
+<td>외부 데모 주소·복수 파일 필드</td>
+<td>우리 서버·단일 file 필드로 변경</td>
+</tr>
+<tr>
+<td>Ant Design 예제</td>
+<td>HTTP 오류 응답도 성공으로 보일 수 있는 처리</td>
+<td>상태 코드와 서버 저장 완료를 확인</td>
+</tr>
+<tr>
+<td>Docker 예제</td>
+<td>태그 없는 postgres·예시 비밀 파일</td>
+<td>지원 버전 고정·비밀값 별도 주입·업로드 볼륨 추가</td>
+</tr>
+<tr>
+<td>실제 DB 시험 예제</td>
+<td>오래된 DB 태그</td>
+<td>운영과 맞는 지원 버전 선택</td>
+</tr>
+<tr>
+<td>중복 UI 도구</td>
+<td>유사 기능 패키지 여러 개 조합</td>
+<td>Ant Design 중심으로 먼저 범위 축소</td>
+</tr>
+</tbody>
+</table></div>
+<p>확장자 차단은 보안의 한 부분입니다. 파일명·크기·보관 위치·권한도 함께 확인하며, 내용·악성코드 검사는 별도 범위로 구분합니다. 과제의 차단목록을 허용목록으로 몰래 바꾸지 않습니다.</p>
+<h2>Before / After: 실제 캡처가 아닌 예상 모형</h2>
+<p>Before는 앱이 없는 현재를 설명하는 간단한 구성도입니다. After는 정책 카드와 업로드 카드를 나란히 놓은 개선 예상 화면입니다. 좁은 화면에서는 위아래로 바뀝니다.</p>
+<p>After 최초 상태는 고정 7종 모두 미선택·커스텀 0/200·파일 미선택입니다. 선택된 화면은 사용자가 exe·scr를 선택하고 sh를 추가한 뒤 setup.exe가 차단되는 예시입니다. 자동으로 켜지는 기본값이 아닙니다.</p>
+<p>HTML에는 GUI(Graphical User Interface, 눈으로 보고 누르는 화면)를 직접 그렸습니다. 저장·업로드 기능이 없는 모형입니다.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>상태</th>
+<th>조건</th>
+<th>보여줄 문구</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>기본 상태</td>
+<td>고정 7개 미선택 · 커스텀 0/200 · 파일 없음</td>
+<td>보낼 파일을 선택하세요.</td>
+</tr>
+<tr>
+<td>저장 중</td>
+<td>선택 요청 처리 중·중복 클릭 제한</td>
+<td>규칙을 저장하고 있습니다.</td>
+</tr>
+<tr>
+<td>저장 실패</td>
+<td>이전 선택과 입력값 유지</td>
+<td>저장하지 못했습니다. 연결을 확인하고 다시 시도하세요.</td>
+</tr>
+<tr>
+<td>중복·최대 개수</td>
+<td>같은 값·201번째 입력 거부</td>
+<td>이미 추가한 값입니다. / 최대 200개까지 추가할 수 있습니다.</td>
+</tr>
+<tr>
+<td>차단 예시</td>
+<td>사용자가 exe를 선택한 뒤 setup.exe 전송</td>
+<td>현재 규칙에서 exe 확장자를 차단하고 있습니다.</td>
+</tr>
+<tr>
+<td>성공 예시</td>
+<td>허용된 파일이 실제 저장 완료</td>
+<td>업로드가 완료되었습니다.</td>
+</tr>
+<tr>
+<td>다른 탭 충돌</td>
+<td>이전 버전으로 수정한 요청 거부</td>
+<td>다른 화면에서 규칙이 바뀌었습니다. 최신 규칙을 확인하세요.</td>
+</tr>
+</tbody>
+</table></div>
+<p>흰 바탕·짙은 글자·보라색 주요 동작·일정한 여백을 제안합니다. 상태는 색만으로 구분하지 않고 문구를 함께 씁니다. 본문 16px 이상, 입력·버튼 높이 44px, 간격 8·16·24px를 디자인 기준으로 제안합니다. 접근성 적합성은 실제 구현 뒤 검증합니다.</p>
+<h2>뒤돌아보기</h2>
+<ul>
+<li>알아낸 사실: UI와 업로드 예제를 합치는 것만으로 실제 정책·DB 정합성·영속성은 완성되지 않습니다.</li>
+<li>아직 모르는 것: 버전 호환·실제 개발 시간·사용성·번들 용량·성능.</li>
+<li>버린 가정: UI 또는 캐시 도구가 서버 검증·200개 제한까지 해결한다는 가정.</li>
+<li>다음 검증 하나: 미선택 7종 → 선택 저장 성공·실패 → 새로고침 유지의 실제 동작 확인.</li>
+</ul>
+<h2>완료·미확인</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>구분</th>
+<th>현재 상태</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>조사·문서</td>
+<td>공식 자료 10개 확인, 108개 항목 연결, 가이드 갱신</td>
+</tr>
+<tr>
+<td>예상 화면</td>
+<td>초기·사용자 변경 후·성공·실패·충돌 모형 작성</td>
+</tr>
+<tr>
+<td>실제 구현</td>
+<td>미착수. 예정 파일은 구현된 파일이 아님</td>
+</tr>
+<tr>
+<td>앱 시험·배포</td>
+<td>28개 시험 모두 미실행, 실제 앱 배포 없음</td>
+</tr>
+<tr>
+<td>효과</td>
+<td>시간·성능·사용성 개선 효과 미측정</td>
+</tr>
+<tr>
+<td>Telegram</td>
+<td>기존 연결·수신 경로 미확인으로 발송하지 않음</td>
+</tr>
+</tbody>
+</table></div>
+<h2>사용한 스킬과 출처</h2>
+<ul>
+<li><a href="https://github.com/feed-mina/mina-gpt-config/blob/main/skills/easy-guide/SKILL.md">easy-guide</a>: 코드 없는 행동·완료 확인·관계도·모형.</li>
+<li><a href="https://github.com/feed-mina/mina-gpt-config/blob/main/skills/fix-guide/SKILL.md">fix-guide</a>: 근거·예정 파일·예외·검증·요청문.</li>
+<li><a href="https://github.com/feed-mina/flow_fileupload_AI/blob/main/docs/IMPLEMENTATION_GUIDE.md">기존 과제 가이드</a>: 108개 점검·28개 시험 기준.</li>
+<li><a href="https://github.com/ant-design/ant-design">R01 ant-design/ant-design</a>: 체크칸·추가칸·파일 보내기·오류 안내를 같은 모양으로 만듭니다.</li>
+<li><a href="https://github.com/shadcn-ui/ui">R02 shadcn-ui/ui</a>: 여백과 선택 표시가 또렷한 화면을 만드는 비교 자료입니다.</li>
+<li><a href="https://github.com/react-dropzone/react-dropzone">R03 react-dropzone/react-dropzone</a>: 파일을 끌어 놓는 칸을 만들지만 저장이나 차단은 대신하지 않습니다.</li>
+<li><a href="https://github.com/TanStack/query">R04 TanStack/query</a>: 저장이 끝난 뒤 최신 목록을 다시 받아 화면과 실제 값을 맞춥니다.</li>
+<li><a href="https://github.com/spring-guides/gs-uploading-files">R05 spring-guides/gs-uploading-files</a>: 파일을 받는 부분과 보관하는 부분을 나누는 참고 자료입니다.</li>
+<li><a href="https://github.com/flyway/flyway">R06 flyway/flyway</a>: 처음 필요한 저장 칸을 만들고 이후 변경을 순서대로 남깁니다.</li>
+<li><a href="https://github.com/testcontainers/testcontainers-java">R07 testcontainers/testcontainers-java</a>: 여러 사람이 동시에 바꿔도 목록이 어긋나지 않는지 시험합니다.</li>
+<li><a href="https://github.com/microsoft/playwright">R08 microsoft/playwright</a>: 버튼과 파일 선택이 예상대로 보이는지 브라우저에서 확인합니다.</li>
+<li><a href="https://github.com/docker/awesome-compose">R09 docker/awesome-compose</a>: 화면·서버·저장소를 함께 켜고 다시 켜도 자료가 남도록 준비합니다.</li>
+<li><a href="https://github.com/OWASP/CheatSheetSeries">R10 OWASP/CheatSheetSeries</a>: 이름만 확인하는 것 외에 크기와 보관 방법도 함께 점검합니다.</li>
+</ul></section><footer><p><a href="flow-ui-research-20261023-105551-qa.md">보고서 검수 결과</a> · 실제 브라우저 화면·클릭 검수는 로컬 연결 시간 초과로 미확인입니다.</p><div class="footlinks"><a href="flow-ui-research-20261023-105551-fix.html">상세판 열기</a><a href="https://github.com/feed-mina/flow_fileupload_AI/blob/main/docs/IMPLEMENTATION_GUIDE.md">업데이트 가이드</a><a href="#start">처음으로</a></div><p>2026-10-23 · flow-ui-research-20261023-105551 · 외부 폰트·라이브러리 없는 독립 보고서</p></footer></main></body></html>
