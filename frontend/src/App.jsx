@@ -4,7 +4,7 @@ import { usePolicy } from './usePolicy.js';
 import UploadPanel from './UploadPanel.jsx';
 
 export default function App() {
-  const { policy, loading, pending, error, notice, mustRefresh, refresh, updateFixed, createCustom, removeCustom } = usePolicy();
+  const { policy, loading, pending, error, fieldError, notice, mustRefresh, refresh, updateFixed, createCustom, removeCustom } = usePolicy();
   const [extension, setExtension] = useState('');
   const disabled = loading || Boolean(pending) || mustRefresh;
 
@@ -21,6 +21,7 @@ export default function App() {
 
         {error && <Alert role="alert" type="error" title={error} action={<Button onClick={refresh} disabled={loading || Boolean(pending)}>최신 규칙 다시 보기</Button>} />}
         <div className="live" role="status" aria-live="polite">{loading ? '규칙을 불러오고 있습니다.' : pending ? '규칙을 저장하고 있습니다.' : notice}</div>
+        {!policy && !loading && <Card><p>규칙을 조회하지 못했습니다. 저장된 목록이 비어 있다는 뜻은 아닙니다.</p><Button onClick={refresh}>규칙 다시 조회</Button></Card>}
 
         {!policy && loading ? <Card><Skeleton active paragraph={{ rows: 5 }} /></Card> : policy && (
           <div className="policy-grid">
@@ -42,6 +43,7 @@ export default function App() {
                 <label className="input-label" htmlFor="extension">추가할 확장자</label>
                 <div className="input-row"><Input id="extension" value={extension} maxLength={policy.maxLength + 1} placeholder="예: sh" autoComplete="off" disabled={disabled} onChange={(event) => setExtension(event.target.value)} /><Button htmlType="submit" type="primary" disabled={disabled || !extension.trim() || policy.customCount >= policy.maxCount} loading={pending === 'custom'}>추가</Button></div>
               </form>
+              {fieldError && <p className="field-error" data-testid="custom-field-error">{fieldError}</p>}
               <p className="footnote">영문·숫자 최대 {policy.maxLength}자 · 최대 {policy.maxCount}개<br />앞의 점과 대소문자는 저장할 때 정리합니다.</p>
               <div className="custom-list" role="list" aria-label="커스텀 확장자 목록">
                 {policy.custom.length ? policy.custom.map((item) => <span role="listitem" key={item.id}><Tag>{item.extension}</Tag><Button type="text" aria-label={`${item.extension} 삭제`} disabled={disabled} onClick={() => removeCustom(item.id)}>×</Button></span>) : <p className="empty">추가한 확장자가 없습니다.</p>}

@@ -45,6 +45,7 @@ class UploadApiTest {
     @Autowired TestRestTemplate rest;
     @SpyBean UploadStorage storage;
     @BeforeEach void resetIsolatedData() throws IOException {
+        jdbc.update("DELETE FROM policy_change");
         jdbc.update("DELETE FROM upload_record");
         jdbc.update("DELETE FROM extension_policy WHERE kind = 'CUSTOM'");
         jdbc.update("UPDATE extension_policy SET enabled = FALSE");
@@ -66,6 +67,52 @@ class UploadApiTest {
         assertThat(Files.readAllBytes(root.resolve(id + ".bin"))).containsExactly(new byte[]{1,2,3});
         assertThat(jdbc.queryForObject("SELECT state FROM upload_record", String.class)).isEqualTo("READY");
         mvc.perform(get("/uploads/" + id + ".bin")).andExpect(status().isNotFound());
+    }
+    @Test void lostResponseCanBeLookedUpWithoutSendingFileAgain() throws Exception {
+        String requestId = java.util.UUID.randomUUID().toString();
+        mvc.perform(get("/api/uploads/status/"+requestId)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("error.code").value("UPLOAD_NOT_CONFIRMED"));
+        mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
+                .andExpect(status().isCreated()).andExpect(jsonPath("requestId").value(requestId));
+        for (int i=0;i<2;i++) mvc.perform(get("/api/uploads/status/"+requestId))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control","no-store"))
+                .andExpect(jsonPath("requestId").value(requestId)).andExpect(jsonPath("state").value("READY"));
+        mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{3})).header("X-Upload-Request-Id",requestId))
+                .andExpect(status().isConflict()).andExpect(jsonPath("error.code").value("UPLOAD_REQUEST_EXISTS"));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM upload_record",Integer.class)).isEqualTo(1);
+        try (var paths=Files.list(root)) { assertThat(paths.count()).isEqualTo(1); }
+    }
+    @Test void invalidLookupIdAndInternalStorageErrorsAreSanitized() throws Exception {
+        mvc.perform(get("/api/uploads/status/not-a-uuid")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("error.code").value("INVALID_UPLOAD_REQUEST_ID"));
+        mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{1})).header("X-Upload-Request-Id","1-1-1-1-1"))
+                .andExpect(status().isBadRequest());
+        doThrow(new IOException("AccessDenied /private/uploads secret-stack")).when(storage).copy(any(),any());
+        String result=mvc.perform(multipart("/api/uploads").part(file("a.txt",new byte[]{1})))
+                .andExpect(status().isInternalServerError()).andExpect(jsonPath("error.requestId").isNotEmpty())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(result).doesNotContain("AccessDenied","/private/uploads","secret-stack");
+        emptyStorage();
+    }
+    @Test void concurrentSameRequestIdSavesOnlyOneFile() throws Exception {
+        String requestId=java.util.UUID.randomUUID().toString();
+        var barrier=new java.util.concurrent.CyclicBarrier(2);
+        doAnswer(invocation->{
+            Object result=invocation.callRealMethod();
+            barrier.await(10,java.util.concurrent.TimeUnit.SECONDS);
+            return result;
+        }).when(storage).copy(any(),any());
+        java.util.function.Supplier<Integer> send=()->{
+            try { return mvc.perform(multipart("/api/uploads").part(file("race.txt",new byte[]{1,2})).header("X-Upload-Request-Id",requestId))
+                    .andReturn().getResponse().getStatus(); }
+            catch(Exception error) { throw new RuntimeException(error); }
+        };
+        var one=java.util.concurrent.CompletableFuture.supplyAsync(send);
+        var two=java.util.concurrent.CompletableFuture.supplyAsync(send);
+        assertThat(java.util.List.of(one.get(20,java.util.concurrent.TimeUnit.SECONDS),two.get(20,java.util.concurrent.TimeUnit.SECONDS)))
+                .containsExactlyInAnyOrder(201,409);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM upload_record",Integer.class)).isEqualTo(1);
+        try(var paths=Files.list(root)){assertThat(paths.count()).isEqualTo(1);}
     }
     @Test void selectedExeBlocksDirectApiAndUnselectedExeIsAllowed() throws Exception {
         jdbc.update("UPDATE extension_policy SET enabled = TRUE WHERE extension = 'exe'");

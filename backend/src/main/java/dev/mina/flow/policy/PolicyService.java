@@ -25,6 +25,7 @@ public class PolicyService {
         checkVersion(repository.lockVersion(), ifMatch);
         repository.setFixed(extension, enabled);
         repository.advanceVersion();
+        repository.audit("FIXED_SET", extension, enabled);
         return repository.snapshot();
     }
 
@@ -43,16 +44,19 @@ public class PolicyService {
         }
         repository.addCustom(extension);
         repository.advanceVersion();
+        repository.audit("CUSTOM_ADDED", extension, true);
         return repository.snapshot();
     }
 
     @Transactional
     public PolicyView deleteCustom(long id, String ifMatch) {
         checkVersion(repository.lockVersion(), ifMatch);
+        String extension = repository.customExtension(id);
         if (repository.deleteCustom(id) != 1) {
             throw new PolicyException(HttpStatus.NOT_FOUND, "CUSTOM_NOT_FOUND", "삭제할 커스텀 확장자가 없습니다. 최신 규칙을 확인해 주세요.");
         }
         repository.advanceVersion();
+        repository.audit("CUSTOM_DELETED", extension, false);
         return repository.snapshot();
     }
 
@@ -66,7 +70,7 @@ public class PolicyService {
     }
 
     private PolicyException invalidExtension() {
-        return new PolicyException(HttpStatus.BAD_REQUEST, "INVALID_EXTENSION", "확장자는 영문·숫자 1~20자로 입력해 주세요.");
+        return new PolicyException(HttpStatus.BAD_REQUEST, "INVALID_EXTENSION", "확장자는 영문·숫자 1~20자로 입력해 주세요.", "extension");
     }
 
     private void checkVersion(long actual, String ifMatch) {

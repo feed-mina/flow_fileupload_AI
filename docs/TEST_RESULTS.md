@@ -1,3 +1,7 @@
+# UX·예외 후속 구현 검증
+
+로컬 Node API 10개 PASS. 첫 UX 구현 커밋 `f605e640965336730ef6c744577a5610622f55c0`의 [실제 CI](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902350802)는 서버 30개·Node 10개·브라우저 11개·실제 재시작 T01~T04·실제 Nginx 413·설치/빌드/Compose config 모두 PASS. 서버 skip 0, 브라우저 retry 0. 이후 정리한 최종 커밋의 판정과 실행 URL은 [PR #3 본문](https://github.com/feed-mina/flow_fileupload_AI/pull/3)·[Checks](https://github.com/feed-mina/flow_fileupload_AI/pull/3/checks)를 따른다. 상세 구성·실행 범위는 [UX_IMPLEMENTATION](UX_IMPLEMENTATION.md)을 참조한다. 아래 PR2/PR1 기록은 과거 실행이며 새 커밋 통과 판정이 아니다.
+
 # T01~T04 시험 결과
 
 ## DEC 후속 검증 — PR #2
@@ -41,3 +45,8 @@
 빌드는 성공했지만 Ant Design 번들의 단일 JS 청크가 587.78KB(gzip 190.71KB)로 Vite의 500KB 권고를 넘었습니다. 모듈의 `use client` 지시문 및 Actions 런타임 관련 경고도 있었으며 실패로 숨기지 않았습니다. 코드 분할과 Actions 메이저 갱신은 후속 최적화 항목입니다.
 
 GitHub Actions의 `policy-test-evidence` 아티팩트에는 JUnit 보고서, 재시작 JSON/서버 로그, Playwright 보고서가 포함됩니다. 서버 시험의 DB 초기화는 Testcontainers가 생성한 격리 DB에서만 수행합니다. 브라우저 시험과 재시작 시험은 각각 별도 DB를 사용합니다. 현재 검사에는 자동 재시도가 없습니다.
+
+
+## 반복 실행에서 발견한 브라우저 시험 문제
+
+`66703ad2e7c5bedf55d596117485e7558fc0ade4`의 [반복 실행](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39902659537)은 서버 30·Node 10·재시작은 통과했지만 브라우저 9/11에서 멈췄다. 두 실패 모두 이미 한 번 누른 로딩 버튼을 정확한 접근 가능한 이름으로 다시 찾는 단계다. 화면 상태 스냅샷과 pageerror 진단을 추가하고, 버튼의 실제 표시 문구로 찾은 뒤 활성화 상태를 확인하도록 보완했다. 요청 수·404 미확정·실제 저장·삭제 검증과 무재시도 설정은 유지한다. 최종 실행의 통과 여부는 PR #3 본문·Checks를 따른다.

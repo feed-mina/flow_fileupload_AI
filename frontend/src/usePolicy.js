@@ -6,6 +6,7 @@ export function usePolicy() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState('');
   const [error, setError] = useState('');
+  const [fieldError, setFieldError] = useState('');
   const [notice, setNotice] = useState('');
   const [mustRefresh, setMustRefresh] = useState(false);
   const activeRead = useRef(null);
@@ -17,6 +18,7 @@ export function usePolicy() {
     activeRead.current = controller;
     setLoading(true);
     setError('');
+    setFieldError('');
     setNotice('');
     try {
       const next = await getPolicy(controller.signal);
@@ -44,6 +46,7 @@ export function usePolicy() {
     writing.current = true;
     setPending(key);
     setError('');
+    setFieldError('');
     setNotice('');
     try {
       const next = await action(policy.version);
@@ -53,6 +56,7 @@ export function usePolicy() {
     } catch (failure) {
       const uncertain = !failure.status || failure.status >= 500 || failure.code === 'INVALID_RESPONSE';
       const conflict = failure.status === 412 || failure.status === 428;
+      if (key === 'custom') setFieldError(failure.message || '입력값을 유지했습니다. 연결을 확인하고 다시 시도해 주세요.');
       setMustRefresh(uncertain || conflict);
       setError(uncertain
         ? '저장 결과를 확인하지 못했습니다. 최신 규칙을 다시 조회해 주세요.'
@@ -65,7 +69,7 @@ export function usePolicy() {
   };
 
   return {
-    policy, loading, pending, error, notice, mustRefresh, refresh,
+    policy, loading, pending, error, fieldError, notice, mustRefresh, refresh,
     updateFixed: (extension, enabled) => mutate(extension, (version) => setFixed(extension, enabled, version)),
     createCustom: (extension) => mutate('custom', (version) => addCustom(extension, version)),
     removeCustom: (id) => mutate(`delete-${id}`, (version) => deleteCustom(id, version)),

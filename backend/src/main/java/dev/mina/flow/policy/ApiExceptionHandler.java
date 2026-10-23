@@ -20,7 +20,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(PolicyException.class)
     ResponseEntity<Failure> policy(PolicyException exception) {
-        return failure(exception.status(), exception.code(), exception.getMessage());
+        return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new Failure(new Error(
+                exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.field())));
     }
 
     @ExceptionHandler({BindException.class, HttpMessageNotReadableException.class})
@@ -32,20 +33,20 @@ public class ApiExceptionHandler {
     ResponseEntity<Failure> database(Exception exception) {
         String requestId = UUID.randomUUID().toString();
         log.error("Policy database request failed; requestId={}", requestId, exception);
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new Failure(
-                new Error("POLICY_STORAGE_UNAVAILABLE", "규칙 저장소에 연결하지 못했습니다. 잠시 후 다시 조회해 주세요.", requestId)));
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).header("Cache-Control", "no-store").body(new Failure(
+                new Error("POLICY_STORAGE_UNAVAILABLE", "규칙 저장소에 연결하지 못했습니다. 잠시 후 다시 조회해 주세요.", requestId, null)));
     }
 
     private ResponseEntity<Failure> failure(HttpStatus status, String code, String message) {
-        return ResponseEntity.status(status).body(new Failure(new Error(code, message, UUID.randomUUID().toString())));
+        return ResponseEntity.status(status).header("Cache-Control", "no-store").body(new Failure(new Error(code, message, UUID.randomUUID().toString(), null)));
     }
 
     record Failure(Error error) {}
-    record Error(String code, String message, String requestId) {}
+    record Error(String code, String message, String requestId, String field) {}
 
     @ExceptionHandler(UploadException.class)
     ResponseEntity<UploadFailure> upload(UploadException exception) {
-        return ResponseEntity.status(exception.status()).body(new UploadFailure(new UploadError(
+        return ResponseEntity.status(exception.status()).header("Cache-Control", "no-store").body(new UploadFailure(new UploadError(
                 exception.code(), exception.getMessage(), UUID.randomUUID().toString(), exception.policyVersion(), exception.extension())));
     }
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -54,4 +55,16 @@ public class ApiExceptionHandler {
     }
     record UploadFailure(UploadError error) {}
     record UploadError(String code, String message, String requestId, Long policyVersion, String extension) {}
+
+    @ExceptionHandler(java.io.IOException.class)
+    ResponseEntity<Failure> uploadRead(Exception exception) {
+        String requestId = UUID.randomUUID().toString();
+        log.error("Upload request read failed; requestId={}", requestId, exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).header("Cache-Control", "no-store").body(new Failure(
+                new Error("UPLOAD_READ_FAILED", "파일 전송을 완료하지 못했습니다. 저장 결과를 확인해 주세요.", requestId, null)));
+    }
+    @ExceptionHandler(org.springframework.web.multipart.MultipartException.class)
+    ResponseEntity<Failure> malformedMultipart(Exception exception) {
+        return failure(HttpStatus.BAD_REQUEST, "INVALID_MULTIPART", "파일 전송 형식을 확인해 주세요.");
+    }
 }
