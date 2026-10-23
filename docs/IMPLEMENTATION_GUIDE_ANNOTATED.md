@@ -4,12 +4,37 @@
 
 > **과제 핵심 한 줄:** 확장자 차단 정책을 데이터베이스에 저장하고 실제 파일 업로드에 서버가 강제 적용하는 서비스를 배포하며, 보안·예외·운영 판단과 AI 활용·검증 과정을 근거로 남긴다.
 
-이 문서는 **구현 전 설계·점검 가이드**다. 체크 항목은 구현 완료나 시험 통과를 의미하지 않는다. 기준 문서는 사용자 제공 `과제_파일업로드_AI개발.md` 전체다. 최초 작성 시 저장소는 비어 있었으며, 현재는 문서가 있고 앱 소스는 아직 없다.
+이 문서는 **구현 전 설계·점검 가이드**다. 체크 항목은 구현 완료나 시험 통과를 의미하지 않는다. 기준 문서는 사용자 제공 `과제_파일업로드_AI개발.md` 전체다. 최초 작성 시점에는 앱 소스가 없었다. 현재 main에는 정책·업로드·UX 구현이 있으며, 항목별 현재 상태는 이 주석판의 상태 열을 따른다.
 
 
-> **주석판 안내:** 원본을 보존한 새 파일이다. 사용자가 말한 RQ는 원본의 요구사항 ID인 **REQ**로 표기한다. 아래 주석은 기존 항목의 위치와 연결을 설명하며 새로운 기능 채택이나 구현 완료를 선언하지 않는다. 원문의 초기 설계 시점 표현은 그대로 보존했고, 이후 채택 상태는 원문 21·22절 및 연결된 구현 문서에서 확인한다.
+> **주석판 안내:** 원본을 보존한 새 파일이다. 사용자가 말한 RQ는 원본의 요구사항 ID인 **REQ**로 표기한다. 아래 주석은 기존 항목의 위치와 연결을 설명하며 새로운 기능 채택이나 구현 완료를 선언하지 않는다. 초기 설계 기록은 과거 기록으로 구분하며, 현재 상태는 이 문서의 main 구현 현황과 각 행의 상태 열을 따른다. 이후 채택 근거는 원문 21·22절 및 연결된 구현 문서에서도 확인한다.
 >
 > **관련 REQ 읽기:** ‘직접’은 과제에 명시된 요구, ‘연관’은 그 요구를 지원하는 설계 판단이다. REQ-14의 고려사항 기록 의무가 모든 권장 기능의 구현 의무를 뜻하지는 않는다. DEC 번호와 REQ 번호가 일대일로 대응하는 것은 아니다.
+
+
+## main 기준 구현 현황 — 2026-10-23
+
+**기준 커밋:** [707064d](https://github.com/feed-mina/flow_fileupload_AI/commit/707064d7df65118394147a227a15fb44e14c2cec). 이 문서 갱신 직전 main을 기준으로 코드·SQL·화면·설정·시험을 대조했다. 아래 근거 링크는 같은 커밋에 고정했다. 이 문서가 main에 반영되어도 기준 코드가 바뀌었다는 뜻은 아니다.
+
+| 표시 | 읽는 방법 |
+|---|---|
+| 구현 | 요구한 코드·구성·문서가 존재한다. **실제 검증 범위는 옆 열을 확인한다.** 특히 Docker 설정 존재와 공개 배포 완료는 별개다. |
+| 부분 구현 | 일부 동작·구성만 있거나 해당 항목의 요구 범위/검증이 남아 있다. 남은 내용을 옆 열에 적었다. |
+| 미구현 | 해당 기능·운영 구성 또는 해당 시험 시나리오가 없다. 시험 표의 미구현은 그 기능 자체가 없다는 뜻과 다를 수 있다. |
+| 범위 제외 | 사용자가 명시적으로 제외한 항목이다. 현재는 FE-U07이며 기존 기본 접근성은 보존한다. |
+
+**실행 증거:** 기준 main의 [GitHub Actions 실행 39905757014](https://github.com/feed-mina/flow_fileupload_AI/actions/runs/39905757014)이 성공했다. 서버 시험 30개(정책 11·업로드 서비스 2·업로드 API 17, skip 0), 프론트 API 시험 10개, 브라우저 시험 11개가 통과했다. 실제 Java 프로세스 재시작, 프론트 빌드, 보고서 점검, Compose 문법 검사, 별도 실제 Nginx 오류 계약 단계의 성공도 확인했다. 이번 문서 수정에서 앱 시험을 새로 실행한 결과로 쓰지 않는다. 전체 앱 Docker 이미지 빌드·Compose 기동·컨테이너 재생성·공개 URL 시험의 성공 증거는 없다.
+
+**구현 현황 요약:** REQ(Requirement)는 과제 요구사항, DEC(Decision)는 설계 결정이다. 아래 숫자는 서로 다른 묶음이다. 요구사항·결정·고려사항·시험을 합쳐 기능 완료율로 계산하지 않는다.
+
+| 묶음 | 구현 | 부분 구현 | 미구현 | 범위 제외 | 합계 |
+|---|---:|---:|---:|---:|---:|
+| REQ | 13 | 2 | 0 | 0 | 15 |
+| DEC | 10 | 2 | 1 | 0 | 13 |
+| 영역별 고려사항 | 69 | 24 | 14 | 1 | 108 |
+| 시험 시나리오 | 18 | 7 | 3 | 0 | 28 |
+
+**우선 남은 부분:** 공개 정책의 권한·격리 결정(DEC-01/BE-S11), 파일 보관·전체 저장량 결정(DEC-13), 실제 배포·영속성 검증(REQ-12/T25/T27), 최소 권한 DB 계정(DB-S04), 감사 상세·로그/성능 보완(DB-O04/BE-O05/DB-P06)이다. 이는 이번 요청에서 새 기능을 구현한다는 뜻이 아니라 남은 현황이다.
 
 ## 주석 찾아보기 — 요청하신 3-2 정책·데이터 / 3-4 운영 관점
 
@@ -51,50 +76,50 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 - **권장:** 이 가이드의 설계 제안. 채택 또는 제외 이유를 기록한다.
 - **확장:** 작은 과제에서 범위를 넘으면 구현을 미루고 한계와 후속 계획을 쓴다.
 - **결정대기:** 아직 사용자가 확정하지 않은 제품 정책·운영값.
-- **검증 방법:** 앞으로 실행할 시험이다. 현재 결과는 모두 미실행이다.
+- **검증 방법:** 최초 설계 당시 작성한 시험 계획이다. 현재 실행 여부는 각 행의 상태·근거 열과 13절을 따른다.
 
 한 항목은 가능한 한 **입력 하나 / 판단 하나 / 상태 변화 하나 / 기대 결과 하나**로 분리했다.
 예: “동시성 처리”를 “199개에서 두 요청 도착 → 공통 정책 행 잠금 → 한 요청 추가 → 다른 요청 재확인 → 최종 200개”로 나눠 확인한다.
 
 ## 3. 과제 요구와 완료 기준
 
-| 요구 ID | 과제의 필수 내용 | 완료를 판단하는 증거 |
-|---|---|---|
-| REQ-01 | 고정 확장자 bat, cmd, com, cpl, exe, scr, js | 정확히 7종 표시 |
-| REQ-02 | 처음에는 모두 미선택 | 새 데이터베이스에서 7개 모두 false |
-| REQ-03 | 선택·해제를 DB에 저장 | 선택 후 새로고침·서버 재시작에도 유지 |
-| REQ-04 | 고정 확장자를 커스텀 목록에 표시하지 않음 | 두 영역 목록이 겹치지 않음 |
-| REQ-05 | 커스텀 확장자 최대 20자 | 20자 성공·21자 거부 |
-| REQ-06 | 커스텀 추가 후 저장·목록 표시 | 재조회해 동일 항목 확인 |
-| REQ-07 | 커스텀 최대 200개 | 200번째 성공·201번째 거부 |
-| REQ-08 | X 클릭 시 DB에서 삭제 | 삭제 후 재조회·새로고침에도 없음 |
-| REQ-09 | 중복 추가 방지 | 같은 정규화 값이 DB에 한 건만 존재 |
-| REQ-10 | 실제 파일 업로드에 정책 적용 | 직접 API 호출도 차단·허용이 동일 |
-| REQ-11 | 차단 이유와 정상 업로드 성공 표시 | 실패 사유와 실제 파일 저장 증거 |
-| REQ-12 | GitHub·공개 배포 주소 제출 | 다른 브라우저에서 접속·동작 확인 |
-| REQ-13 | 테이블 스키마·README 제출 | 컬럼·타입·제약·인덱스 및 실행법 존재 |
-| REQ-14 | 고려사항 문서 제출 | 각 관점의 채택·제외 이유 확인 |
-| REQ-15 | AI 활용 기록 제출 | 입력·의도·검증·수정·도구·회고 확인 |
+| 요구 ID | 과제의 필수 내용 | 완료를 판단하는 증거 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|
+| REQ-01 | 고정 확장자 bat, cmd, com, cpl, exe, scr, js | 정확히 7종 표시 | 구현 | 고정 7종 초기화·표시, 초기 상태 통합 시험 통과. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L50) |
+| REQ-02 | 처음에는 모두 미선택 | 새 데이터베이스에서 7개 모두 false | 구현 | 초기 false, 새 DB 시험 통과. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L50) |
+| REQ-03 | 선택·해제를 DB에 저장 | 선택 후 새로고침·서버 재시작에도 유지 | 구현 | DB 저장·새로고침·실제 두 Java 프로세스 재시작 시험 통과. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L21) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js) |
+| REQ-04 | 고정 확장자를 커스텀 목록에 표시하지 않음 | 두 영역 목록이 겹치지 않음 | 구현 | 고정 이름 커스텀 추가 거부·목록 분리. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L37) · [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L16) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) |
+| REQ-05 | 커스텀 확장자 최대 20자 | 20자 성공·21자 거부 | 구현 | 정규화 후 최대 20자, 20/21자 통합 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L68) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| REQ-06 | 커스텀 추가 후 저장·목록 표시 | 재조회해 동일 항목 확인 | 구현 | 추가 후 DB·서버 응답으로 목록 확정. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L33) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L77) |
+| REQ-07 | 커스텀 최대 200개 | 200번째 성공·201번째 거부 | 구현 | CUSTOM 200개 제한·부모 잠금·199개 경쟁 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L42) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131) |
+| REQ-08 | X 클릭 시 DB에서 삭제 | 삭제 후 재조회·새로고침에도 없음 | 구현 | 삭제·재조회·실서버 브라우저 회귀 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L52) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L158) |
+| REQ-09 | 중복 추가 방지 | 같은 정규화 값이 DB에 한 건만 존재 | 구현 | 정규화·UNIQUE·중복 오류. 같은 버전의 경쟁 쓰기는 412도 가능. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L15) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L39) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) |
+| REQ-10 | 실제 파일 업로드에 정책 적용 | 직접 API 호출도 차단·허용이 동일 | 구현 | 서버가 저장 정책 스냅샷으로 직접 API도 차단. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L44) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| REQ-11 | 차단 이유와 정상 업로드 성공 표시 | 실패 사유와 실제 파일 저장 증거 | 구현 | 차단 사유·정책 버전·READY 성공 표시와 실제 파일 저장 시험. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L61) |
+| REQ-12 | GitHub·공개 배포 주소 제출 | 다른 브라우저에서 접속·동작 확인 | 부분 구현 | GitHub 제출·문서는 존재. 공개 호스팅·배포 주소·외부 접속 검증 미완료. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) |
+| REQ-13 | 테이블 스키마·README 제출 | 컬럼·타입·제약·인덱스 및 실행법 존재 | 구현 | V1~V3 SQL·제약/인덱스·실행 README 존재. CI 새 DB 마이그레이션 통과. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| REQ-14 | 고려사항 문서 제출 | 각 관점의 채택·제외 이유 확인 | 구현 | 가이드·DEC·UX 채택/한계 문서 존재. 모든 권장 기능의 구현 완료를 뜻하지 않음. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) |
+| REQ-15 | AI 활용 기록 제출 | 입력·의도·검증·수정·도구·회고 확인 | 부분 구현 | 요청·의도·수정·도구·검증 기록 존재. 지원자 본인의 최종 회고·제출본 점검은 남음. [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) |
 
 ## 4. 구현 전 결정할 제안
 
 아래 값은 **확정 요건이 아닌 권장 초안**이다. 변경하면 서버·화면·문서·시험을 함께 수정한다.
 
-| 결정 ID | 항목 | 권장 초안 | 이유·한계 | 관련 REQ |
-|---|---|---|---|---|
-| DEC-01 | 정책 범위 | 로컬은 단일 정책으로 시작. 공개 전 공유 정책의 편집 권한 또는 방문자별 데모 격리 방식 확정 | 서로 다른 방문자의 변경 충돌과 시험 오염을 통제해야 함 | REQ-12·14(연관: 공개 정책 범위·권한 결정) |
-| DEC-02 | 확장자 입력 | 앞뒤 공백 제거 → 선행 점 한 개 제거 → 소문자화 → ASCII 영문·숫자 1~20자만 허용 | .PDF와 pdf를 동일하게 처리. 공백·점·유니코드를 조용히 삭제하지 않고 거부 | REQ-05·09(직접: 길이·중복), REQ-14(정규화 판단) |
-| DEC-03 | 고정 이름 충돌 | 커스텀에 exe 등을 추가하면 고정 영역에서 선택하도록 안내 | 미선택 고정 확장자를 커스텀으로 몰래 활성화하지 않음 | REQ-04·09(직접: 고정/커스텀 분리·중복) |
-| DEC-04 | 이중 확장자 | 마지막 점 뒤의 확장자만 정책과 비교 | report.exe.txt는 txt로 판단. 중간 exe가 실행 위험을 없앤다는 의미는 아님 | REQ-10·11(연관: 판정·결과 안내), REQ-14(파싱 규칙) |
-| DEC-05 | 복합 확장자 | tar.gz는 gz로 판단, 커스텀 tar.gz는 입력 규칙상 거부 | 복합 확장자 지원은 별도 정책으로 확장 | REQ-05·10(연관: 입력·판정), REQ-14(복합 확장자 처리) |
-| DEC-06 | 특수 파일명 | 확장자 없음·.env 같은 단독 숨김 이름·끝이 점인 이름은 사유를 나눠 거부 | 과제 필수 규칙이 아닌 파일명 정책 제안 | REQ-10·11(연관: 검증·오류 안내), REQ-14(추가 파일명 규칙) |
-| DEC-07 | 파일 개수·크기 | 요청당 1개, 파일당 10 MiB, multipart 요청 전체 12 MiB | 10 MiB = 10 × 1024 × 1024바이트. 실행 환경과 함께 최종 확정 | REQ-10·11(연관: 업로드·초과 안내), REQ-14(크기·개수 제안값) |
-| DEC-08 | 빈 파일·파일명 | 0바이트 거부, 파일명 최대 255 UTF-8바이트 제안 | 화면 글자 수와 바이트 길이의 차이를 안내 | REQ-10·11(연관: 검증·오류 안내), REQ-14(빈 파일·이름 한도) |
-| DEC-09 | 저장 방식 | 원본 이름은 표시용 메타데이터, 실제 저장 키는 서버 UUID | 같은 이름 덮어쓰기·경로 조작을 피함 | REQ-10·11·13(연관: 실제 저장·증거·스키마), REQ-14(저장 설계) |
-| DEC-10 | 정책 적용 시점 | 업로드 검증 시작 때 읽은 커밋된 정책 버전을 해당 요청에 적용 | 이후 정책 수정은 다음 검증부터 적용. 이미 허용된 파일을 소급 취소하지 않음 | REQ-03·10·11(연관: 저장된 정책·적용·결과), REQ-14(적용 시점) |
-| DEC-11 | 내용 검사 | 1차는 확장자 정책과 안전한 저장을 완성. 형식별 내용 검사·악성코드 검사는 확장으로 구분 | 확장자 차단만으로 안전한 파일임을 보장하지 못함 | REQ-10(연관: 확장자 정책 적용), REQ-14(내용 검사 범위) |
-| DEC-12 | 저장소·버전 | 지원 중인 안정 버전을 골라 빌드·잠금 파일·이미지 태그에 고정 | 구체적인 Java·Spring Boot·React·PostgreSQL 버전은 구현 착수 시 확정 | REQ-12·13·14(연관: 배포·재현·버전 선택 기록) |
-| DEC-13 | 보관 기간·총량 | 공개 배포 전에 파일 보관 기간·전체 저장 한도·초기화 방식을 확정 | 파일당 제한만으로 디스크 고갈을 막을 수 없음 | REQ-12·14(연관: 공개 운영·보관/총량 판단) |
+| 결정 ID | 항목 | 권장 초안 | 이유·한계 | 관련 REQ | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DEC-01 | 정책 범위 | 로컬은 단일 정책으로 시작. 공개 전 공유 정책의 편집 권한 또는 방문자별 데모 격리 방식 확정 | 서로 다른 방문자의 변경 충돌과 시험 오염을 통제해야 함 | REQ-12·14(연관: 공개 정책 범위·권한 결정) | 부분 구현 | policy_scope.id=1 단일 정책만 구현. 사용자별 범위·인증/인가·데모 격리는 미구현·미결정. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L2) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| DEC-02 | 확장자 입력 | 앞뒤 공백 제거 → 선행 점 한 개 제거 → 소문자화 → ASCII 영문·숫자 1~20자만 허용 | .PDF와 pdf를 동일하게 처리. 공백·점·유니코드를 조용히 삭제하지 않고 거부 | REQ-05·09(직접: 길이·중복), REQ-14(정규화 판단) | 구현 | 실제 순서는 공백·선행 점 제거 → 원문 ASCII 검사 → 소문자화. 유니코드 우회 방지를 위해 초안 순서를 보완. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L63) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| DEC-03 | 고정 이름 충돌 | 커스텀에 exe 등을 추가하면 고정 영역에서 선택하도록 안내 | 미선택 고정 확장자를 커스텀으로 몰래 활성화하지 않음 | REQ-04·09(직접: 고정/커스텀 분리·중복) | 구현 | 고정 이름은 409 안내, 자동 활성화 없음. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L37) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) |
+| DEC-04 | 이중 확장자 | 마지막 점 뒤의 확장자만 정책과 비교 | report.exe.txt는 txt로 판단. 중간 exe가 실행 위험을 없앤다는 의미는 아님 | REQ-10·11(연관: 판정·결과 안내), REQ-14(파싱 규칙) | 구현 | lastIndexOf로 마지막 확장자 사용, 통합 시험. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java#L15) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L137) |
+| DEC-05 | 복합 확장자 | tar.gz는 gz로 판단, 커스텀 tar.gz는 입력 규칙상 거부 | 복합 확장자 지원은 별도 정책으로 확장 | REQ-05·10(연관: 입력·판정), REQ-14(복합 확장자 처리) | 구현 | tar.gz 업로드는 gz, 커스텀 tar.gz는 입력 거부. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L68) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L137) |
+| DEC-06 | 특수 파일명 | 확장자 없음·.env 같은 단독 숨김 이름·끝이 점인 이름은 사유를 나눠 거부 | 과제 필수 규칙이 아닌 파일명 정책 제안 | REQ-10·11(연관: 검증·오류 안내), REQ-14(추가 파일명 규칙) | 구현 | 확장자 없음·숨김 이름·끝 점 등 코드 분리. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L132) |
+| DEC-07 | 파일 개수·크기 | 요청당 1개, 파일당 10 MiB, multipart 요청 전체 12 MiB | 10 MiB = 10 × 1024 × 1024바이트. 실행 환경과 함께 최종 확정 | REQ-10·11(연관: 업로드·초과 안내), REQ-14(크기·개수 제안값) | 구현 | 1개·10 MiB·전체 12 MiB 설정, 앱 경계 및 실제 Nginx 413 시험 통과. 전체 Compose 기동은 미검증. [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java#L27) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) · [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [verify-proxy.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-proxy.mjs) |
+| DEC-08 | 빈 파일·파일명 | 0바이트 거부, 파일명 최대 255 UTF-8바이트 제안 | 화면 글자 수와 바이트 길이의 차이를 안내 | REQ-10·11(연관: 검증·오류 안내), REQ-14(빈 파일·이름 한도) | 구현 | 0바이트·파일명 UTF-8 255바이트 한도와 경계 시험. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java#L13) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L49) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L137) |
+| DEC-09 | 저장 방식 | 원본 이름은 표시용 메타데이터, 실제 저장 키는 서버 UUID | 같은 이름 덮어쓰기·경로 조작을 피함 | REQ-10·11·13(연관: 실제 저장·증거·스키마), REQ-14(저장 설계) | 구현 | UUID.bin·독립 저장 루트·메타데이터, 파일 내용/키 시험. [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java#L21) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L61) |
+| DEC-10 | 정책 적용 시점 | 업로드 검증 시작 때 읽은 커밋된 정책 버전을 해당 요청에 적용 | 이후 정책 수정은 다음 검증부터 적용. 이미 허용된 파일을 소급 취소하지 않음 | REQ-03·10·11(연관: 저장된 정책·적용·결과), REQ-14(적용 시점) | 구현 | REPEATABLE_READ 스냅샷 1회·적용 버전 응답, 복사 중 정책 변경 시험 통과. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L17) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L183) |
+| DEC-11 | 내용 검사 | 1차는 확장자 정책과 안전한 저장을 완성. 형식별 내용 검사·악성코드 검사는 확장으로 구분 | 확장자 차단만으로 안전한 파일임을 보장하지 못함 | REQ-10(연관: 확장자 정책 적용), REQ-14(내용 검사 범위) | 구현 | 확장자 정책·안전한 저장으로 범위를 제한한 결정 적용. 내용 검사·악성코드 검사 기능은 미구현. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L65) |
+| DEC-12 | 저장소·버전 | 지원 중인 안정 버전을 골라 빌드·잠금 파일·이미지 태그에 고정 | 구체적인 Java·Spring Boot·React·PostgreSQL 버전은 구현 착수 시 확정 | REQ-12·13·14(연관: 배포·재현·버전 선택 기록) | 부분 구현 | pom·npm lock·이미지 태그 존재. 일부 이미지 태그는 Java 17/nginx 1.28 등 가변 태그이며 digest·전 이미지 불변 고정/재빌드 검증 미완료. [pom.xml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/pom.xml) · [package-lock.json](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/package-lock.json) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/Dockerfile) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| DEC-13 | 보관 기간·총량 | 공개 배포 전에 파일 보관 기간·전체 저장 한도·초기화 방식을 확정 | 파일당 제한만으로 디스크 고갈을 막을 수 없음 | REQ-12·14(연관: 공개 운영·보관/총량 판단) | 미구현 | 파일 보관 기간·전체 저장 한도·초기화 방식 미확정. 자동 정리/총량 제한 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L68) |
 
 정책이 모두 미선택이면 **확장자 정책 때문에 차단되는 항목은 없어야 한다.**
 파일 크기·파일명 검증 등 독립적인 규칙은 별도 오류로 안내한다. exe를 사용자 선택과 무관하게 항상 차단하는 숨은 규칙을 추가하지 않는다.
@@ -117,205 +142,217 @@ Spring Boot와 React는 사용자의 이번 과제 선택이며 회사 전체의
 
 ### 6.1 UX·예외 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DB-U01 | 필수 | 첫 실행에 고정 행이 없음 | 7개를 false로 생성하는 초기 마이그레이션 | 빈 DB 실행 후 7행 확인 |
-| DB-U02 | 권장 | 화면 저장 뒤 DB 반영 실패 | 롤백하고 성공 응답을 보내지 않음 | 연결 실패를 주입해 값 불변 확인 |
-| DB-U03 | 권장 | 삭제한 항목을 다시 삭제 | 대상 없음과 이미 반영됨을 계약에 정의 | 같은 ID를 두 번 삭제 |
-| DB-U04 | 권장 | 여러 표의 일부만 저장 | 정책 수정·버전 증가·감사를 한 트랜잭션으로 묶음 | 중간 오류 후 전체 롤백 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DB-U01 | 필수 | 첫 실행에 고정 행이 없음 | 7개를 false로 생성하는 초기 마이그레이션 | 빈 DB 실행 후 7행 확인 | 구현 | V1 false 7행, 초기 DB 시험. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L50) |
+| DB-U02 | 권장 | 화면 저장 뒤 DB 반영 실패 | 롤백하고 성공 응답을 보내지 않음 | 연결 실패를 주입해 값 불변 확인 | 구현 | 버전/감사 실패 시 전체 롤백·503, 오류 주입 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L154) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L175) |
+| DB-U03 | 권장 | 삭제한 항목을 다시 삭제 | 대상 없음과 이미 반영됨을 계약에 정의 | 같은 ID를 두 번 삭제 | 구현 | 최신 버전 재삭제 404, 감사·버전 추가 변경 없음. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L52) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L142) |
+| DB-U04 | 권장 | 여러 표의 일부만 저장 | 정책 수정·버전 증가·감사를 한 트랜잭션으로 묶음 | 중간 오류 후 전체 롤백 확인 | 구현 | 정책·버전·policy_change를 동일 트랜잭션으로 저장, 롤백 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L154) |
 
 ### 6.2 검증·보안 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DB-S01 | 권장 | 빈 값·NULL 저장 | extension NOT NULL 및 길이 CHECK | 직접 잘못된 INSERT 거부 |
-| DB-S02 | 권장 | 대문자·특수문자 우회 | 정규형 ASCII 소문자·숫자 CHECK | SH·공백·점 포함 값 거부 |
-| DB-S03 | 권장 | SQL 문자열 조립 | 바인딩 파라미터를 사용하는 저장 계층 | 인용부호 입력이 쿼리로 실행되지 않음 |
-| DB-S04 | 권장 | 앱 계정 과다 권한 | 앱 실행 계정에 필요한 테이블 권한만 부여 | 관리자 기능 접근 제한 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DB-S01 | 권장 | 빈 값·NULL 저장 | extension NOT NULL 및 길이 CHECK | 직접 잘못된 INSERT 거부 | 구현 | NOT NULL·VARCHAR(20)·정규식 CHECK 존재. 직접 잘못된 INSERT별 독립 시험은 미확인. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L10) |
+| DB-S02 | 권장 | 대문자·특수문자 우회 | 정규형 ASCII 소문자·숫자 CHECK | SH·공백·점 포함 값 거부 | 구현 | 소문자 ASCII/숫자 CHECK. 입력 우회 API 시험 존재; 직접 SQL 전수 시험과 구분. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L10) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| DB-S03 | 권장 | SQL 문자열 조립 | 바인딩 파라미터를 사용하는 저장 계층 | 인용부호 입력이 쿼리로 실행되지 않음 | 구현 | JdbcTemplate 바인딩 파라미터 사용. SQL 주입 전용 시험은 미확인. [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L25) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L72) |
+| DB-S04 | 권장 | 앱 계정 과다 권한 | 앱 실행 계정에 필요한 테이블 권한만 부여 | 관리자 기능 접근 제한 확인 | 미구현 | Compose POSTGRES_USER와 앱 DB_USER가 동일. 별도 최소 권한 앱 계정/GRANT 분리 없음. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L6) |
 
 ### 6.3 정책·데이터 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DB-P01 | 필수 | sh 중복 저장 | 정책 범위 + 정규 확장자에 UNIQUE | 동시에 sh 추가해 한 행만 존재 |
-| DB-P02 | 필수 | 200개 계산 대상 | kind=CUSTOM만 계산, 고정 7개 제외 | 고정 7 + 커스텀 200 허용 |
-| DB-P03 | 권장 | 199개에서 동시 추가 | 동일한 정책 부모 행을 잠근 뒤 개수 확인·추가 | 다른 두 확장자 동시 추가 후 200개 |
-| DB-P04 | 권장 | 고정 행 삭제·이름 변경 | 고정 종류와 허용 이름 조합을 제약하고 수정 API 제한 | 고정 삭제·이름 변경 거부 |
-| DB-P05 | 권장 | 오래된 화면의 덮어쓰기 | 부모 정책 버전을 비교하고 충돌 시 저장 거부 | 같은 버전으로 수정 두 번 시 두 번째 충돌 |
-| DB-P06 | 권장 | 최대 200개 조회 성능 | 범위·확장자 복합 UNIQUE 인덱스 활용 | 조회 계획 확인, 별도 검색 엔진 제외 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DB-P01 | 필수 | sh 중복 저장 | 정책 범위 + 정규 확장자에 UNIQUE | 동시에 sh 추가해 한 행만 존재 | 구현 | UNIQUE(policy_id, extension)·중복 검사. API 동일 버전 경합에는 버전 충돌도 적용. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L15) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L39) |
+| DB-P02 | 필수 | 200개 계산 대상 | kind=CUSTOM만 계산, 고정 7개 제외 | 고정 7 + 커스텀 200 허용 | 구현 | CUSTOM만 COUNT, 200개 한도 시험. [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L39) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) |
+| DB-P03 | 권장 | 199개에서 동시 추가 | 동일한 정책 부모 행을 잠근 뒤 개수 확인·추가 | 다른 두 확장자 동시 추가 후 200개 | 구현 | 부모 행 FOR UPDATE 뒤 개수 검사, 199개 경쟁 201/412·최종 200 시험. [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L14) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131) |
+| DB-P04 | 권장 | 고정 행 삭제·이름 변경 | 고정 종류와 허용 이름 조합을 제약하고 수정 API 제한 | 고정 삭제·이름 변경 거부 | 구현 | FIXED/CUSTOM CHECK·고정 수정 API는 enabled만 변경. DB 직접 DML 권한 제한은 DB-S04 미구현. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L16) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L29) |
+| DB-P05 | 권장 | 오래된 화면의 덮어쓰기 | 부모 정책 버전을 비교하고 충돌 시 저장 거부 | 같은 버전으로 수정 두 번 시 두 번째 충돌 | 구현 | If-Match 버전 비교·412, 서버 계약 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L25) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L88) |
+| DB-P06 | 권장 | 최대 200개 조회 성능 | 범위·확장자 복합 UNIQUE 인덱스 활용 | 조회 계획 확인, 별도 검색 엔진 제외 | 부분 구현 | 복합 UNIQUE 인덱스는 존재. 목록은 kind 필터·정렬도 사용; EXPLAIN/부하·지연 측정 근거 없음. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L15) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L25) |
 
 <a id="note-p-04"></a>
 
+> **main 구현 상태: 부분 구현.** UNIQUE 인덱스·부모 잠금은 구현. DB-P06 조회 계획/부하 측정과 FE-O05의 200개 모바일 검증은 남음. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java) · [styles.css](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/styles.css)
+>
 > **주석 P-04** — **정책·데이터 — 조회·저장 성능과 인덱스:** 직접 위치는 DB-P06의 범위·확장자 복합 UNIQUE 인덱스와 조회 계획 확인이다. DB-P01 및 11절은 같은 키의 중복 방지도 설명한다. REQ-13은 인덱스를 포함한 스키마 문서, REQ-14는 선택 근거이며 별도의 응답시간 목표나 성능 전용 DEC는 원문에 없다. 저장에서는 DB-P03·BE-P04·11절의 부모 행 잠금 → 버전/중복/개수 검사 → 추가·버전 증가 순서가 중요하다. UNIQUE 인덱스만으로 200개 제한을 보장하지 않는다. 인덱스 추가는 실제 범위·kind 필터의 조회 계획을 확인해 판단하며 이 주석은 성능 측정 완료를 뜻하지 않는다. 화면 수백 개 태그의 줄바꿈·스크롤·삭제 터치 영역은 FE-O05에 있다.
 
 ### 6.4 운영 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DB-O01 | 권장 | 서버 시작 시 기존 선택값 초기화 | 초기 데이터는 한 번만 생성, 시작마다 덮어쓰지 않음 | exe 선택 후 서버 재시작 |
-| DB-O02 | 권장 | 스키마 변경 재현 | Flyway 같은 마이그레이션 도구 후보, 도입 여부 기록 | 새 DB에 동일 스키마 생성 |
-| DB-O03 | 권장 | DB와 파일의 복원 시점 차이 | DB 백업과 파일 백업의 연결 방법 기록 | 별도 환경에 복원 후 누락 대조 |
-| DB-O04 | 확장 | 변경 주체·시각 감사 | 인증 주체·변경 전후·정책 버전·시각 기록 | 변경 이력에서 전후 비교 |
-| DB-O05 | 권장 | 로그·이력 무한 증가 | 보관 기간·삭제 작업·용량 지표 정의 | 만료 데이터 정리 후 최신 이력 유지 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DB-O01 | 권장 | 서버 시작 시 기존 선택값 초기화 | 초기 데이터는 한 번만 생성, 시작마다 덮어쓰지 않음 | exe 선택 후 서버 재시작 | 구현 | Flyway 1회 초기화, 실제 Java 재시작 유지 시험. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L10) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) |
+| DB-O02 | 권장 | 스키마 변경 재현 | Flyway 같은 마이그레이션 도구 후보, 도입 여부 기록 | 새 DB에 동일 스키마 생성 | 구현 | V1~V3 마이그레이션·새 PostgreSQL 생성 CI. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
+| DB-O03 | 권장 | DB와 파일의 복원 시점 차이 | DB 백업과 파일 백업의 연결 방법 기록 | 별도 환경에 복원 후 누락 대조 | 부분 구현 | DB/파일 동시 백업·대조 수동 절차 존재. 별도 환경 복원·누락 대조 실험 미실행. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L63) |
+| DB-O04 | 확장 | 변경 주체·시각 감사 | 인증 주체·변경 전후·정책 버전·시각 기록 | 변경 이력에서 전후 비교 | 부분 구현 | policy_change에 변경 후 값·버전·동작·시각 기록. 인증 주체·명시적 before 값·감사 조회 화면/API 없음. [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql#L1) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L59) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md#L31) |
+| DB-O05 | 권장 | 로그·이력 무한 증가 | 보관 기간·삭제 작업·용량 지표 정의 | 만료 데이터 정리 후 최신 이력 유지 | 미구현 | 감사·로그 보관 일수·자동 삭제·용량 지표 수집 없음. 결정 보류 문서만 존재. [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md#L31) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
 
 <a id="note-p-02"></a>
 
+> **main 구현 상태: 부분 구현.** DB-U04의 원자적 감사 저장은 구현·시험 통과. DB-O04의 인증 주체·명시적 변경 전 값 및 감사 조회 기능은 없음. [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L154) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md#L31)
+>
 > **주석 P-02** — **정책·데이터 — 감사 필요 여부:** 감사 전용 DEC나 직접 필수 REQ는 없다. 원문 6.4 DB-O04는 **확장**, 11절 `policy_audit`는 **선택**으로 제시되었으며 채택·제외 근거는 REQ-14, 스키마 기록은 REQ-13과 연결된다. DB-U04는 감사 채택 시 정책·버전·감사의 원자성을 제안한다. 이후 원문 22절은 PR3에서 감사 이력의 원자적 저장을 채택했다고 명시하므로 초기 ‘확장/선택’과 이후 채택 상태를 구별한다. DEC-01의 인증 주체·정책 범위, DEC-10의 적용 버전은 연관 설계다. 변경 전후 값·버전·시각·주체를 추적하되 인증하지 않은 사용자의 신원을 확인된 주체처럼 기록할 수는 없다.
 
 ## 7. 서버 — Spring Boot
 
 ### 7.1 UX·예외 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| BE-U01 | 필수 | 차단 이유 표시 | EXTENSION_BLOCKED와 판단 확장자 제공 | EXE 업로드 오류 내용 확인 |
-| BE-U02 | 권장 | 잘못된 정책 입력 | INVALID_EXTENSION으로 필드·허용 규칙 안내 | 공백만 입력해 400 확인 |
-| BE-U03 | 권장 | 최대 개수 초과 | CUSTOM_LIMIT_REACHED로 409 응답 제안 | 201번째 추가 |
-| BE-U04 | 권장 | 프록시·서버 크기 초과 | 413과 화면에서 읽을 수 있는 일반 안내 통일 | 프록시 차단과 앱 차단 각각 시험 |
-| BE-U05 | 권장 | 저장 처리 중 내부 오류 | 요청 추적 ID만 공개, 내부 경로·스택 숨김 | 저장 권한 오류 응답 확인 |
-| BE-U06 | 권장 | 성공 여부 불명확한 타임아웃 | 조회로 상태 확인, 업로드 자동 재전송 금지 | 응답 유실 상황에서 중복 저장 점검 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| BE-U01 | 필수 | 차단 이유 표시 | EXTENSION_BLOCKED와 판단 확장자 제공 | EXE 업로드 오류 내용 확인 | 구현 | 422·차단 확장자·적용 버전 제공, 실서버/브라우저 시험. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L52) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| BE-U02 | 권장 | 잘못된 정책 입력 | INVALID_EXTENSION으로 필드·허용 규칙 안내 | 공백만 입력해 400 확인 | 구현 | 400 INVALID_EXTENSION·field=extension·입력 규칙, 공백 입력 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L64) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L175) |
+| BE-U03 | 권장 | 최대 개수 초과 | CUSTOM_LIMIT_REACHED로 409 응답 제안 | 201번째 추가 | 구현 | 201번째 409 CUSTOM_LIMIT_REACHED, 경계 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L43) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) |
+| BE-U04 | 권장 | 프록시·서버 크기 초과 | 413과 화면에서 읽을 수 있는 일반 안내 통일 | 프록시 차단과 앱 차단 각각 시험 | 구현 | Nginx/앱 413 JSON과 프론트 일반 안내, 실제 경계 시험. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java#L53) · [api.test.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/lib/api.test.js#L30) · [verify-proxy.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-proxy.mjs) |
+| BE-U05 | 권장 | 저장 처리 중 내부 오류 | 요청 추적 ID만 공개, 내부 경로·스택 숨김 | 저장 권한 오류 응답 확인 | 구현 | 클라이언트에는 일반 문구/추적 ID, 파일·DB 내부정보 비노출 시험. 서버 로그 최소화는 BE-O05 별도. [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L85) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L154) |
+| BE-U06 | 권장 | 성공 여부 불명확한 타임아웃 | 조회로 상태 확인, 업로드 자동 재전송 금지 | 응답 유실 상황에서 중복 저장 점검 | 구현 | 클라이언트 요청 UUID·15초 제한·GET 상태 조회·재전송 금지. 실제 저장 후 응답 유실 시험. [api.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/lib/api.js) · [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java#L32) · [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L115) |
 
 ### 7.2 검증·보안 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| BE-S01 | 필수 | 화면 검증 우회 | 모든 규칙을 서버에서 다시 검사 | HTTP 도구로 직접 요청 |
-| BE-S02 | 권장 | 확장자 입력 정규화 | DEC-02의 순서로 공통 함수에서 처리 | .SH·sh·내부 공백 입력 |
-| BE-S03 | 권장 | 파일명 경로 구분자 | /·역슬래시·제어문자 포함 파일명 거부 | ../a.txt와 윈도 경로 입력 |
-| BE-S04 | 권장 | 저장 경로 탈출 | UUID 기반 경로를 만들고 저장 루트 내부인지 확인 | 조작된 이름에도 외부 경로 미생성 |
-| BE-S05 | 권장 | MIME 위조 | 클라이언트 Content-Type을 안전성 증명으로 사용하지 않음 | 실행형 내용을 image/jpeg로 전송 |
-| BE-S06 | 확장 | 실제 내용·확장자 불일치 | 지원 형식만 내용 검사; 판독 불가·불일치 기준 문서화 | 이름만 jpg로 바꾼 샘플 검사 |
-| BE-S07 | 권장 | 파일 크기 | multipart 제한과 실제 읽은 바이트 한도를 함께 설계 | 한도 바로 아래·정확히·바로 위 |
-| BE-S08 | 권장 | 파일 개수 | 단일 파일 필드라도 다른 이름의 추가 파트까지 검사 | 두 파일을 서로 다른 필드로 전송 |
-| BE-S09 | 권장 | 빈 파일·누락된 파일 | 필드 누락과 0바이트를 구분 | 없는 file 필드·빈 파일 각각 시험 |
-| BE-S10 | 권장 | 업로드 파일의 실행·노출 | 웹 정적 경로 밖에 저장하고 원본 직접 URL 미제공 | 저장 파일을 웹 경로로 요청 |
-| BE-S11 | 권장 | 정책 변경 권한 | 공개 전 인증·인가 또는 데모 격리 중 선택 | 다른 방문자가 정책을 바꾸는 범위 확인 |
-| BE-S12 | 권장 | 교차 출처·세션 위조 | 같은 출처 구성을 우선. 쿠키 인증 도입 시 CSRF 보호 결정 | 허용되지 않은 출처와 변경 요청 시험 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| BE-S01 | 필수 | 화면 검증 우회 | 모든 규칙을 서버에서 다시 검사 | HTTP 도구로 직접 요청 | 구현 | 서버 정책·이름·크기 재검사, 직접 API 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| BE-S02 | 권장 | 확장자 입력 정규화 | DEC-02의 순서로 공통 함수에서 처리 | .SH·sh·내부 공백 입력 | 구현 | 공통 normalize 함수. 실제는 ASCII 검사 후 소문자화로 초안 순서 보완. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L63) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| BE-S03 | 권장 | 파일명 경로 구분자 | /·역슬래시·제어문자 포함 파일명 거부 | ../a.txt와 윈도 경로 입력 | 구현 | 경로 구분자·콜론·제어문자 거부. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java#L12) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L132) |
+| BE-S04 | 권장 | 저장 경로 탈출 | UUID 기반 경로를 만들고 저장 루트 내부인지 확인 | 조작된 이름에도 외부 경로 미생성 | 구현 | UUID 경로·루트 부모 확인, 안전한 파일명/저장 시험. [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java#L23) · [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java) |
+| BE-S05 | 권장 | MIME 위조 | 클라이언트 Content-Type을 안전성 증명으로 사용하지 않음 | 실행형 내용을 image/jpeg로 전송 | 구현 | Content-Type을 허용 근거로 사용하지 않음. MIME 위조 전용 조합 시험은 미확인. [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L21) |
+| BE-S06 | 확장 | 실제 내용·확장자 불일치 | 지원 형식만 내용 검사; 판독 불가·불일치 기준 문서화 | 이름만 jpg로 바꾼 샘플 검사 | 미구현 | 파일 형식별 내용 검사·불일치 판정·악성코드 검사 도입하지 않음. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L65) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L21) |
+| BE-S07 | 권장 | 파일 크기 | multipart 제한과 실제 읽은 바이트 한도를 함께 설계 | 한도 바로 아래·정확히·바로 위 | 구현 | multipart 설정·실제 스트림 바이트 한도, HTTP ±1 경계 시험. [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) · [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java#L32) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L159) · [UploadServiceTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadServiceTest.java#L25) |
+| BE-S08 | 권장 | 파일 개수 | 단일 파일 필드라도 다른 이름의 추가 파트까지 검사 | 두 파일을 서로 다른 필드로 전송 | 구현 | 모든 multipart Part 검사·추가 파일/필드 거부 시험. [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java#L24) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L148) |
+| BE-S09 | 권장 | 빈 파일·누락된 파일 | 필드 누락과 0바이트를 구분 | 없는 file 필드·빈 파일 각각 시험 | 구현 | 누락·0바이트·잘못된 필드 코드 구분 시험. [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java#L26) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L49) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L148) |
+| BE-S10 | 권장 | 업로드 파일의 실행·노출 | 웹 정적 경로 밖에 저장하고 원본 직접 URL 미제공 | 저장 파일을 웹 경로로 요청 | 구현 | 정적 루트 밖 uploads·UUID.bin, 다운로드/직접 URL 기능 없음. 공개 호스트 검증 미실행. [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java) · [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L76) |
+| BE-S11 | 권장 | 정책 변경 권한 | 공개 전 인증·인가 또는 데모 격리 중 선택 | 다른 방문자가 정책을 바꾸는 범위 확인 | 미구현 | 로그인·권한·사용자별/방문자별 격리 없음. Origin 필터는 인증이 아님. [BrowserOriginFilter.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/BrowserOriginFilter.java) · [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L2) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| BE-S12 | 권장 | 교차 출처·세션 위조 | 같은 출처 구성을 우선. 쿠키 인증 도입 시 CSRF 보호 결정 | 허용되지 않은 출처와 변경 요청 시험 | 부분 구현 | 동일 출처 검사·교차 출처 403 시험 존재. 쿠키 인증/인증용 CSRF 방어는 아직 해당 구현 없음. [BrowserOriginFilter.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/BrowserOriginFilter.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L194) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L40) |
 
 ### 7.3 정책·데이터 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| BE-P01 | 필수 | 고정 선택·해제 저장 | toggle 명령 대신 원하는 enabled 값을 PUT | 같은 true 요청 반복에도 true |
-| BE-P02 | 필수 | 커스텀 고정 이름 충돌 | CUSTOM_FIXED_CONFLICT, 고정 영역 사용 안내 | 미선택 exe를 커스텀에 추가 |
-| BE-P03 | 권장 | 중복과 개수 초과 동시 발생 | 중복 확인을 개수 검사보다 앞에 수행 | 200개 상태에서 기존 sh 재추가 |
-| BE-P04 | 권장 | 다른 API의 잠금 누락 | 모든 정책 쓰기가 같은 부모 행 잠금·버전 규칙 사용 | 추가·삭제·고정 변경 동시 요청 |
-| BE-P05 | 권장 | 업로드와 정책 변경 경합 | 읽은 정책 버전을 성공·거부 결과에 기록 | 업로드 중 정책 변경 후 적용 버전 확인 |
-| BE-P06 | 권장 | 한글·긴 파일명 | 파일명은 표시용 보관, 길이는 UTF-8바이트로 검사 | 같은 글자 수의 영문·한글 비교 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| BE-P01 | 필수 | 고정 선택·해제 저장 | toggle 명령 대신 원하는 enabled 값을 PUT | 같은 true 요청 반복에도 true | 구현 | enabled 원하는 값으로 PUT. 반복 true는 상태 유지하지만 버전·감사는 증가. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L21) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L29) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L66) |
+| BE-P02 | 필수 | 커스텀 고정 이름 충돌 | CUSTOM_FIXED_CONFLICT, 고정 영역 사용 안내 | 미선택 exe를 커스텀에 추가 | 구현 | 409 CUSTOM_FIXED_CONFLICT·고정 영역 안내. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L37) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) |
+| BE-P03 | 권장 | 중복과 개수 초과 동시 발생 | 중복 확인을 개수 검사보다 앞에 수행 | 200개 상태에서 기존 sh 재추가 | 구현 | 고정 충돌·중복을 개수 검사보다 먼저 검사, 상한 중복 시험. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L39) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) |
+| BE-P04 | 권장 | 다른 API의 잠금 누락 | 모든 정책 쓰기가 같은 부모 행 잠금·버전 규칙 사용 | 추가·삭제·고정 변경 동시 요청 | 구현 | 추가·삭제·고정 변경 모두 부모 잠금·버전 검사. 모든 API 조합의 동시 실행 시험은 미확인. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [PolicyRepository.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyRepository.java#L13) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131) |
+| BE-P05 | 권장 | 업로드와 정책 변경 경합 | 읽은 정책 버전을 성공·거부 결과에 기록 | 업로드 중 정책 변경 후 적용 버전 확인 | 구현 | 성공/업무 거부에 policyVersion. 파싱 등 스냅샷 전 오류는 버전 없음. 정책 경합 시험. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java#L49) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L183) |
+| BE-P06 | 권장 | 한글·긴 파일명 | 파일명은 표시용 보관, 길이는 UTF-8바이트로 검사 | 같은 글자 수의 영문·한글 비교 | 구현 | 원본명 메타데이터·UTF-8 255바이트 검사, 한글 경계 시험. [FilenameRules.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/FilenameRules.java#L13) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L137) |
 
 <a id="note-p-01"></a>
 
+> **main 구현 상태: 구현.** DEC-03·REQ-04/09: 고정 충돌 거부·정규화·목록 분리·DB 제약 구현. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L37) · [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96)
+>
 > **주석 P-01** — **정책·데이터 — 고정/커스텀 충돌:** DEC-03 → REQ-04·09. 원문 BE-P02는 `CUSTOM_FIXED_CONFLICT`로 고정 영역 사용을 안내하고, FE-P01은 두 목록을 분리한다. 11절의 `UNIQUE(policy_id, extension)`와 CUSTOM의 고정 7종 금지 CHECK가 저장 단계도 보호한다. 고정 exe가 미선택이어도 커스텀으로 우회 추가하거나 자동 선택하지 않는 것이 초안의 선택이다. 정규화는 DEC-02와 함께 검토한다.
 
 ### 7.4 운영 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| BE-O01 | 권장 | 파일 저장·DB 저장의 비원자성 | PENDING → READY 상태, 실패 시 파일 정리 | 파일 이동 실패·DB 완료 실패 주입 |
-| BE-O02 | 권장 | 강제 종료로 남는 임시 파일 | 만료 임시 파일·PENDING·고아 파일 대조 절차 작성 | 중간 종료 후 재시작·정리 |
-| BE-O03 | 권장 | 정책 DB 조회 실패 | 허용으로 간주하지 않고 503 실패 처리 | DB 중지 상태 업로드 거부 |
-| BE-O04 | 권장 | 파일 전체 메모리 적재 | 스트림·임시 파일로 처리, 무제한 byte 배열 회피 | 동시 업로드 시 메모리 관찰 |
-| BE-O05 | 권장 | 로그에 민감정보 노출 | 요청 ID·결과 코드·정책 버전·크기·처리시간 중심 | 파일 본문·토큰·개인 파일명 미기록 확인 |
-| BE-O06 | 확장 | 남용·과부하 | 요청 빈도·동시 업로드·총 저장량 제한 | 제한 초과 시 429·정의된 응답 |
-| BE-O07 | 권장 | 장애 상태 식별 | health로 준비 여부 확인, 민감한 관리 정보 비공개 | DB 불통 시 준비 실패 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| BE-O01 | 권장 | 파일 저장·DB 저장의 비원자성 | PENDING → READY 상태, 실패 시 파일 정리 | 파일 이동 실패·DB 완료 실패 주입 | 구현 | PENDING→READY·커밋 후 응답, 이동/DB 갱신 장애 롤백·파일 정리 시험. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L171) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L177) |
+| BE-O02 | 권장 | 강제 종료로 남는 임시 파일 | 만료 임시 파일·PENDING·고아 파일 대조 절차 작성 | 중간 종료 후 재시작·정리 | 부분 구현 | 일반 실패 임시 정리와 수동 대조 절차 존재. 강제 종료 후 복구 실험·자동 만료 청소 없음. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L84) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L63) |
+| BE-O03 | 권장 | 정책 DB 조회 실패 | 허용으로 간주하지 않고 503 실패 처리 | DB 중지 상태 업로드 거부 | 구현 | 정책 DB 실패 시 파일 생성 전 503, 오류 주입 단위 시험. 실제 DB 중지 실험과 구분. [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java#L33) · [UploadServiceTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadServiceTest.java#L17) |
+| BE-O04 | 권장 | 파일 전체 메모리 적재 | 스트림·임시 파일로 처리, 무제한 byte 배열 회피 | 동시 업로드 시 메모리 관찰 | 구현 | 8 KiB 버퍼 스트리밍·multipart 디스크 임시 저장. 동시 부하 메모리 측정은 미실행. [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java#L29) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L19) |
+| BE-O05 | 권장 | 로그에 민감정보 노출 | 요청 ID·결과 코드·정책 버전·크기·처리시간 중심 | 파일 본문·토큰·개인 파일명 미기록 확인 | 부분 구현 | 추적 ID 오류 로그 일부 존재. 결과·버전·크기·처리시간의 일관된 구조화 로그 없음; 예외 스택의 내부 경로 등 최소화 점검도 남음. [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java#L35) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L91) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) |
+| BE-O06 | 확장 | 남용·과부하 | 요청 빈도·동시 업로드·총 저장량 제한 | 제한 초과 시 429·정의된 응답 | 미구현 | 파일 1개 크기 제한 외 요청 빈도·동시 업로드·전체 저장량 제한/429 없음. [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java#L22) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| BE-O07 | 권장 | 장애 상태 식별 | health로 준비 여부 확인, 민감한 관리 정보 비공개 | DB 불통 시 준비 실패 확인 | 부분 구현 | health 노출·상세 숨김은 설정. readiness 라우팅·DB 중지 시 준비 상태 시험 근거 없음. [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L31) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
 
 <a id="note-o-02"></a>
 
+> **main 구현 상태: 부분 구현.** 일부 오류 추적 로그·정책 변경 이력·health 설정은 존재. 구조화 요청 지표·보관/청소·디스크 알람·readiness 연동은 미완료. [ApiExceptionHandler.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/ApiExceptionHandler.java) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml)
+>
 > **주석 O-02** — **운영 — 로그·모니터링:** BE-O05의 기존 기록 후보는 **요청 ID·결과 코드·정책 버전·크기·처리시간**이다. 파일 본문·토큰·개인 파일명은 로그에 남기지 않는 것을 검증한다. 정책 감사의 변경 주체·전후 값·버전·시각은 DB-O04, 보관 기간·삭제·용량 지표는 DB-O05, 준비 상태는 BE-O07, 로그 순환·업로드 총량·잔여 디스크는 DP-O02, 재배포 후 기본 점검은 DP-O06에서 찾는다. 운영 로그 전용 DEC는 없고 DEC-10의 정책 버전, DEC-13의 **업로드 파일** 보관·총량과 연관된다. DEC-13을 로그 보관 기간까지 확정한 결정으로 해석하지 않는다. REQ-14로 운영 판단을 기록하며, REQ-15의 AI 활용 기록과 서비스 운영 로그는 구분한다. 수치형 알람 임계값·로그 보관 일수는 원문에 확정값이 없다.
 
 ## 8. 프론트엔드 — React
 
 ### 8.1 UX·예외 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| FE-U01 | 필수 | 최초 고정 체크박스 표시 | DB 조회 결과 사용. 조회 중 임의 상태로 편집 허용하지 않음 | 초기 true 저장값이 false로 깜박이며 덮어써지지 않음 |
-| FE-U02 | 권장 | 체크 저장 중 재클릭 | 해당 항목 비활성화·저장 중 안내 | 빠른 두 번 클릭 |
-| FE-U03 | 권장 | 저장 실패 시 체크 표시 | 성공 응답 후 값 확정, 실패는 이전 값 유지 | 서버 오류 후 실제 DB와 일치 |
-| FE-U04 | 권장 | 추가 실패 시 입력 유실 | 실패하면 입력값 유지·오류를 입력 근처에 표시 | 네트워크 차단 후 sh 입력 유지 |
-| FE-U05 | 필수 | X 삭제 반영 | 성공 후 목록 제거, 실패 시 항목 유지 | 삭제 실패 응답 주입 |
-| FE-U06 | 권장 | 목록 없음·로딩·실패 혼동 | 세 상태를 다른 문구와 재시도 동작으로 구분 | 빈 목록과 조회 실패 비교 |
-| FE-U07 | 권장 | 키보드·읽기 도구 | label 연결, X 버튼의 구체적 이름, 오류 알림 | Tab·Enter·화면 읽기 점검 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| FE-U01 | 필수 | 최초 고정 체크박스 표시 | DB 조회 결과 사용. 조회 중 임의 상태로 편집 허용하지 않음 | 초기 true 저장값이 false로 깜박이며 덮어써지지 않음 | 구현 | 조회 전 편집 차단·true 값 그대로 표시, 지연 응답 시험. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L69) |
+| FE-U02 | 권장 | 체크 저장 중 재클릭 | 해당 항목 비활성화·저장 중 안내 | 빠른 두 번 클릭 | 구현 | pending·writing 잠금·저장 안내, 재클릭 요청 1회 시험. [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L45) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L82) |
+| FE-U03 | 권장 | 저장 실패 시 체크 표시 | 성공 응답 후 값 확정, 실패는 이전 값 유지 | 서버 오류 후 실제 DB와 일치 | 구현 | 응답 후만 정책 확정, 실패 이전 값 유지·재조회. [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L26) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L43) |
+| FE-U04 | 권장 | 추가 실패 시 입력 유실 | 실패하면 입력값 유지·오류를 입력 근처에 표시 | 네트워크 차단 후 sh 입력 유지 | 구현 | 실패 시 입력 보존·필드 근처 오류, 모킹 화면 시험. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L7) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L56) |
+| FE-U05 | 필수 | X 삭제 반영 | 성공 후 목록 제거, 실패 시 항목 유지 | 삭제 실패 응답 주입 | 구현 | 성공 후 목록 갱신·실패 태그/개수 유지, 모킹 및 실서버 시험. [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L75) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L93) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L158) |
+| FE-U06 | 권장 | 목록 없음·로딩·실패 혼동 | 세 상태를 다른 문구와 재시도 동작으로 구분 | 빈 목록과 조회 실패 비교 | 구현 | 로딩·조회 실패·빈 목록 구분과 재시도, 화면 시험. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L105) |
+| FE-U07 | 권장 | 키보드·읽기 도구 | label 연결, X 버튼의 구체적 이름, 오류 알림 | Tab·Enter·화면 읽기 점검 | 범위 제외 | 사용자 지정 제외 유지. 기존 label·삭제 이름·기본 키보드 회귀는 존재하나 신규 접근성/읽기 도구 완료 판정은 하지 않음. [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md#L3) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L142) |
 
 ### 8.2 검증·보안 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| FE-S01 | 필수 | 20자 초과 입력 | 길이 안내와 서버 오류 모두 처리 | 붙여넣기·직접 API 비교 |
-| FE-S02 | 권장 | 파일 이름을 HTML로 표시 | 일반 텍스트로 렌더링, HTML 삽입 API 미사용 | 태그처럼 생긴 파일명 표시 |
-| FE-S03 | 권장 | 파일 선택기 accept 신뢰 | 편의 기능으로만 사용, 서버 최종 판정 | 선택 제한을 우회해 전송 |
-| FE-S04 | 권장 | 브라우저에 비밀값 포함 | DB 비밀번호·관리 토큰을 프론트 환경변수에 넣지 않음 | 배포된 JS 내용 검사 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| FE-S01 | 필수 | 20자 초과 입력 | 길이 안내와 서버 오류 모두 처리 | 붙여넣기·직접 API 비교 | 구현 | 20자 안내·21자 입력 서버 거부·필드 오류. UI는 선행 점용 1자를 추가 수용; 붙여넣기 전용 E2E는 미확인. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L44) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L68) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| FE-S02 | 권장 | 파일 이름을 HTML로 표시 | 일반 텍스트로 렌더링, HTML 삽입 API 미사용 | 태그처럼 생긴 파일명 표시 | 구현 | 파일명은 JSX 텍스트로 렌더링. 태그 모양 파일명 전용 브라우저 검증은 미확인. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L64) |
+| FE-S03 | 권장 | 파일 선택기 accept 신뢰 | 편의 기능으로만 사용, 서버 최종 판정 | 선택 제한을 우회해 전송 | 구현 | 선택기 accept 제한에 의존하지 않고 서버 최종 판정. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L58) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| FE-S04 | 권장 | 브라우저에 비밀값 포함 | DB 비밀번호·관리 토큰을 프론트 환경변수에 넣지 않음 | 배포된 JS 내용 검사 | 구현 | 프론트 코드에 DB 비밀번호/관리 토큰 주입 없음, /api 상대 주소. 공개 배포 번들 검사 미실행. [api.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/lib/api.js) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
 
 <a id="note-p-03"></a>
 
+> **main 구현 상태: 구현.** REQ-05/07: 20자·200개 제한과 오류·입력 유지·개수 표시 구현, 서버 경계/동시성 시험 통과. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131)
+>
 > **주석 P-03** — **정책·데이터 — 제한의 근거·초과 UX:** 최대 **20자는 REQ-05**, 최대 **200개는 REQ-07**에 명시된 과제 조건이다. 성능 측정으로 새로 정한 수치가 아니다. DEC-02는 이 길이 조건에 정규화·문자 규칙을 더한 결정이며 200개만의 DEC는 없다. DB-P02는 고정 7종을 제외한 CUSTOM만 세고, DB-P03은 199개에서의 동시 추가를 보호한다. BE-U02/FE-S01은 잘못된 입력·길이를 안내하고, BE-U03은 개수 초과에 `CUSTOM_LIMIT_REACHED`·409를 제안한다. FE-U04는 실패 입력을 유지하고 FE-P02는 서버 확정 `customCount / 200`을 표시한다. BE-P03에 따라 200개에서 기존 항목을 재추가하면 중복을 먼저 안내한다. 경계 검증 위치는 T06(20/21자), T07(동시 추가), T08(상한에서 중복)이다. DEC-07의 파일 크기·개수, DEC-08의 파일명 바이트 한도와는 별도 조건이다.
 
 ### 8.3 정책·데이터 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| FE-P01 | 필수 | 고정과 커스텀 목록 구분 | 서버 kind 기준으로 별도 렌더링 | 고정 항목이 커스텀 영역에 없음 |
-| FE-P02 | 필수 | 커스텀 개수 표시 | 저장 완료된 customCount / 200 사용 | 추가·삭제 후 개수 확인 |
-| FE-P03 | 권장 | 화면 오래 열어둠 | 버전 충돌 시 최신 정책 재조회·다시 검토 안내 | 두 탭의 이전 버전 수정 |
-| FE-P04 | 권장 | 변경 전 정책으로 사전 안내 | 안내임을 명시, 실제 결과는 서버 응답 사용 | 다른 탭에서 정책 변경 후 업로드 |
-| FE-P05 | 권장 | 요청값·응답값 혼용 | 입력 초안과 서버 확정 상태를 분리 | 정규화 전 .PDF가 저장 후 pdf로 표시 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| FE-P01 | 필수 | 고정과 커스텀 목록 구분 | 서버 kind 기준으로 별도 렌더링 | 고정 항목이 커스텀 영역에 없음 | 구현 | 서버 fixed/custom 배열 별도 렌더링. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L31) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L49) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L37) |
+| FE-P02 | 필수 | 커스텀 개수 표시 | 저장 완료된 customCount / 200 사용 | 추가·삭제 후 개수 확인 | 구현 | 응답 customCount/maxCount 표시, 추가·삭제 후 갱신. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L40) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) |
+| FE-P03 | 권장 | 화면 오래 열어둠 | 버전 충돌 시 최신 정책 재조회·다시 검토 안내 | 두 탭의 이전 버전 수정 | 부분 구현 | 412/428이면 편집 잠금·최신 규칙 다시 보기 제공. 자동 재조회하지 않으며 두 실제 브라우저 탭 동시 편집 시험 없음. [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L58) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L22) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L88) |
+| FE-P04 | 권장 | 변경 전 정책으로 사전 안내 | 안내임을 명시, 실제 결과는 서버 응답 사용 | 다른 탭에서 정책 변경 후 업로드 | 부분 구현 | 실제 업로드 결과의 서버 적용 버전 표시. 클라이언트 정책 사전 차단 안내 기능은 없음. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L35) · [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L4) |
+| FE-P05 | 권장 | 요청값·응답값 혼용 | 입력 초안과 서버 확정 상태를 분리 | 정규화 전 .PDF가 저장 후 pdf로 표시 | 구현 | 입력 초안과 policy 응답 분리, 성공 후 초기화·정규화 목록 표시. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx#L1) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java#L34) |
 
 <a id="note-o-01"></a>
 
+> **main 구현 상태: 부분 구현.** 서버 잠금·버전·스냅샷·새로고침/실제 Java 재시작은 구현/검증. 화면은 충돌 후 수동 재조회이며 두 실제 탭 경합 전용 시험은 없음. [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L88)
+>
 > **주석 O-01** — **운영 — 새로고침·동시 편집 정합성:** REQ-03은 저장값의 새로고침·재시작 유지 요구다. DB-O01·DP-P01은 초기값 덮어쓰기 방지와 DB 영속 저장, FE-U01은 조회 중 임의 상태 저장 방지를 다룬다. 동시 편집은 DB-P05·BE-P04·FE-P03 및 12절 `If-Match`/412 계약에 분산되어 있다. 오래된 버전의 쓰기를 거부하고 최신 정책 재조회 후 다시 검토하도록 안내하며, FE-O04는 늦은 조회 응답이 최신 상태를 덮어쓰는 문제를 다룬다. DEC-01은 공유 범위, DEC-10·BE-P05·FE-P04는 **업로드 검증에 적용한 정책 버전**에 해당한다. DEC-10 하나가 편집 잠금·새로고침 문제 전체를 정의하는 것은 아니다.
 
 ### 8.4 운영 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| FE-O01 | 권장 | 개발·운영 API 주소 차이 | 환경별 주소 또는 같은 출처 /api 사용 | 운영 번들에 localhost 없음 |
-| FE-O02 | 권장 | 서버 연결 실패 | 재시도 버튼 제공, 실패를 업로드 성공으로 표시하지 않음 | 서버 중지 후 전송 |
-| FE-O03 | 권장 | 파일 업로드 연속 실행 | 전송 중 버튼 비활성화, 완료 후 파일 입력 초기화 | 같은 파일을 재선택해 시험 |
-| FE-O04 | 권장 | 오래된 응답이 최신 상태 덮음 | 요청 취소·순번 또는 재조회로 응답 순서 제어 | 느린 첫 조회와 빠른 두 번째 조회 |
-| FE-O05 | 권장 | 모바일에서 200개 태그 표시 | 줄바꿈·스크롤·삭제 버튼 터치 영역 점검 | 좁은 화면에서 200개 목록 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| FE-O01 | 권장 | 개발·운영 API 주소 차이 | 환경별 주소 또는 같은 출처 /api 사용 | 운영 번들에 localhost 없음 | 구현 | 상대 /api·동일 출처 Nginx/Vite 프록시. 실제 공개 호스트 검증은 미실행. [api.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/lib/api.js) · [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) |
+| FE-O02 | 권장 | 서버 연결 실패 | 재시도 버튼 제공, 실패를 업로드 성공으로 표시하지 않음 | 서버 중지 후 전송 | 구현 | 정책 재조회·업로드 결과 GET 재조회·실패/미확인 구분, 재전송 금지 시험. [App.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/App.jsx) · [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L128) |
+| FE-O03 | 권장 | 파일 업로드 연속 실행 | 전송 중 버튼 비활성화, 완료 후 파일 입력 초기화 | 같은 파일을 재선택해 시험 | 부분 구현 | busy 중 버튼 잠금. 정상 업로드 성공 후 file 상태/DOM 입력 초기화는 구현되지 않아 후속 보완 필요. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L59) · [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L30) |
+| FE-O04 | 권장 | 오래된 응답이 최신 상태 덮음 | 요청 취소·순번 또는 재조회로 응답 순서 제어 | 느린 첫 조회와 빠른 두 번째 조회 | 구현 | AbortController로 이전 조회 취소·aborted 응답 무시. 느린 두 조회 순서의 전용 시험은 미확인. [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L16) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js#L25) |
+| FE-O05 | 권장 | 모바일에서 200개 태그 표시 | 줄바꿈·스크롤·삭제 버튼 터치 영역 점검 | 좁은 화면에서 200개 목록 확인 | 부분 구현 | 태그 줄바꿈·삭제 44px 영역·390px 기본 회귀 있음. 200개 태그 모바일 성능/화면 시험 없음. [styles.css](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/styles.css#L1) · [styles.css](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/styles.css#L3) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L142) |
 
 ## 9. 배포 — Docker와 실제 호스팅
 
 ### 9.1 UX·예외 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DP-U01 | 필수 | 평가자가 접속할 URL 없음 | 호스팅 선정 후 공개 주소를 README에 기입 | 로그인하지 않은 다른 브라우저 접속 |
-| DP-U02 | 권장 | 무료 서버 잠자기·첫 응답 지연 | 실제 서비스 정책을 확인하고 첫 로딩 안내 | 일정 시간 미접속 후 재호출 |
-| DP-U03 | 권장 | 앱 시작 전 프록시 연결 | readiness 이후 요청 전달 | 새 배포 직후 응답 점검 |
-| DP-U04 | 권장 | React 하위 경로 새로고침 실패 | 정적 서버의 SPA fallback 설정 | 하위 주소 직접 접속·새로고침 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DP-U01 | 필수 | 평가자가 접속할 URL 없음 | 호스팅 선정 후 공개 주소를 README에 기입 | 로그인하지 않은 다른 브라우저 접속 | 미구현 | 공개 호스트·주소 없음, README는 localhost 실행만 제공. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L19) |
+| DP-U02 | 권장 | 무료 서버 잠자기·첫 응답 지연 | 실제 서비스 정책을 확인하고 첫 로딩 안내 | 일정 시간 미접속 후 재호출 | 미구현 | 호스팅 미선정으로 휴면/콜드 스타트 정책 확인·전용 안내·실제 시험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| DP-U03 | 권장 | 앱 시작 전 프록시 연결 | readiness 이후 요청 전달 | 새 배포 직후 응답 점검 | 미구현 | frontend depends_on은 시작 순서만 지정. backend readiness/health 조건으로 프록시 전달 제어 없음. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L27) |
+| DP-U04 | 권장 | React 하위 경로 새로고침 실패 | 정적 서버의 SPA fallback 설정 | 하위 주소 직접 접속·새로고침 | 구현 | Nginx SPA fallback 구성. 하위 경로 새로고침 전용 배포 시험은 미실행. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf#L14) |
 
 ### 9.2 검증·보안 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DP-S01 | 권장 | DB 포트 인터넷 노출 | 내부 네트워크만 연결, 외부 publish 제외 | 외부에서 DB 접속 실패 |
-| DP-S02 | 권장 | 컨테이너 관리자 권한 | 앱은 비관리자 사용자로 실행 | 컨테이너 UID·쓰기 권한 확인 |
-| DP-S03 | 권장 | 이미지에 비밀번호 포함 | 런타임 비밀값 주입, .dockerignore로 .env 제외 | 이미지·빌드 로그 검사 |
-| DP-S04 | 권장 | 전송 구간 노출 | 호스팅에서 HTTPS 구성 | 브라우저에서 HTTPS 업로드 성공 |
-| DP-S05 | 권장 | 관리 엔드포인트 노출 | 필요한 health만 제한 노출 | env·heapdump 외부 접근 거부 |
-| DP-S06 | 권장 | 여러 단계의 크기 제한 불일치 | 프록시·컨테이너·앱에 DEC-07 기준 반영 | 각 제한 경계에서 오류 안내 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DP-S01 | 권장 | DB 포트 인터넷 노출 | 내부 네트워크만 연결, 외부 publish 제외 | 외부에서 DB 접속 실패 | 구현 | Compose DB ports 미공개·내부 통신. 실제 배포 외부 접속 차단 검증은 미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| DP-S02 | 권장 | 컨테이너 관리자 권한 | 앱은 비관리자 사용자로 실행 | 컨테이너 UID·쓰기 권한 확인 | 부분 구현 | 백엔드 USER flow. 프론트 Nginx 컨테이너 전체 비루트 구성/실제 UID·권한 시험은 미완료. [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/Dockerfile#L11) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) |
+| DP-S03 | 권장 | 이미지에 비밀번호 포함 | 런타임 비밀값 주입, .dockerignore로 .env 제외 | 이미지·빌드 로그 검사 | 구현 | 런타임 비밀번호 주입·양쪽 .dockerignore 존재. 실제 이미지 빌드·레이어 비밀 검사 미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [.dockerignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/.dockerignore) · [.dockerignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/.dockerignore) |
+| DP-S04 | 권장 | 전송 구간 노출 | 호스팅에서 HTTPS 구성 | 브라우저에서 HTTPS 업로드 성공 | 미구현 | Nginx listen 80만 있음, 공개 HTTPS 인증서·TLS 종료 미구성. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf#L2) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| DP-S05 | 권장 | 관리 엔드포인트 노출 | 필요한 health만 제한 노출 | env·heapdump 외부 접근 거부 | 구현 | Actuator health만 노출·상세 숨김. 공개 호스트 env/heapdump 접근 시험 미실행. [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L35) |
+| DP-S06 | 권장 | 여러 단계의 크기 제한 불일치 | 프록시·컨테이너·앱에 DEC-07 기준 반영 | 각 제한 경계에서 오류 안내 확인 | 구현 | Nginx 12m·multipart 10/12MB·Tomcat 12MB 일치. 앱 경계·별도 실제 Nginx 시험 통과. [nginx.conf](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/nginx.conf) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml) · [verify-proxy.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-proxy.mjs) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L159) |
 
 ### 9.3 정책·데이터 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DP-P01 | 필수 | 재배포 후 정책 사라짐 | PostgreSQL 데이터 경로에 영속 볼륨 연결 | 컨테이너 재생성 후 정책 재조회 |
-| DP-P02 | 권장 | 재배포 후 파일 사라짐 | 업로드 루트를 별도 영속 볼륨에 연결 | 재생성 후 파일 존재 확인 |
-| DP-P03 | 권장 | DB·파일 볼륨 혼동 | pgdata와 uploads를 분리 | 연결 위치와 권한 확인 |
-| DP-P04 | 권장 | 환경별 설정 섞임 | 개발·시험·운영 DB와 저장 경로 분리 | 시험 파일이 운영에 생성되지 않음 |
-| DP-P05 | 권장 | 호스팅의 임시 디스크 | 선택 환경의 영속 디스크 지원을 확인 | 실제 재배포 후 데이터 유지 실험 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DP-P01 | 필수 | 재배포 후 정책 사라짐 | PostgreSQL 데이터 경로에 영속 볼륨 연결 | 컨테이너 재생성 후 정책 재조회 | 구현 | policy_data 볼륨 구성 존재. 실제 컨테이너 재생성 보존은 미검증이며 Java 프로세스 재시작 시험과 구별. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L9) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
+| DP-P02 | 권장 | 재배포 후 파일 사라짐 | 업로드 루트를 별도 영속 볼륨에 연결 | 재생성 후 파일 존재 확인 | 구현 | upload_data 영속 볼륨 구성 존재. 실제 컨테이너 재생성 후 파일 유지 미검증. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L23) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
+| DP-P03 | 권장 | DB·파일 볼륨 혼동 | pgdata와 uploads를 분리 | 연결 위치와 권한 확인 | 구현 | policy_data/upload_data 경로 분리. 실제 컨테이너 쓰기 권한 확인 미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| DP-P04 | 권장 | 환경별 설정 섞임 | 개발·시험·운영 DB와 저장 경로 분리 | 시험 파일이 운영에 생성되지 않음 | 부분 구현 | 시험 DB·업로드 임시 루트는 분리. 공개 운영 환경은 없어 운영 분리 설정/시험 미완료. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml#L57) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| DP-P05 | 권장 | 호스팅의 임시 디스크 | 선택 환경의 영속 디스크 지원을 확인 | 실제 재배포 후 데이터 유지 실험 | 미구현 | 호스팅 영속 디스크 미선정·재배포 유지 실험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
 
 ### 9.4 운영 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| DP-O01 | 권장 | 실행 순서만 맞고 DB는 준비 안 됨 | DB healthcheck와 앱 연결 재시도 설정 | DB 시작을 지연시켜 앱 기동 |
-| DP-O02 | 권장 | 무제한 로그·업로드로 디스크 고갈 | 로그 순환·업로드 총량·잔여 공간 점검 | 제한 임계치 도달 시 동작 |
-| DP-O03 | 권장 | 버전 없는 이미지 재현 실패 | 구체 태그·다이제스트와 배포 커밋 기록 | 같은 커밋 재빌드·실행 |
-| DP-O04 | 권장 | 실패 배포 복구 | 이전 이미지와 호환되는 DB 변경 순서 설계 | 이전 버전 복귀 시험 |
-| DP-O05 | 권장 | 볼륨을 백업으로 오해 | 별도 백업과 복원 절차 작성 | 다른 볼륨으로 복원 |
-| DP-O06 | 권장 | 면접 당일 서비스 중단 | 면접 전 접속·DB·업로드·용량 점검 | 공개 URL에서 실제 시험 결과 기록 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| DP-O01 | 권장 | 실행 순서만 맞고 DB는 준비 안 됨 | DB healthcheck와 앱 연결 재시도 설정 | DB 시작을 지연시켜 앱 기동 | 부분 구현 | DB healthcheck/service_healthy 존재. 앱 연결 재시도 정책·DB 지연 기동 실험 미완료. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml#L26) · [application.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/application.yml#L9) |
+| DP-O02 | 권장 | 무제한 로그·업로드로 디스크 고갈 | 로그 순환·업로드 총량·잔여 공간 점검 | 제한 임계치 도달 시 동작 | 미구현 | Docker 로그 순환·총량 제한·디스크 지표/알람 없음. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| DP-O03 | 권장 | 버전 없는 이미지 재현 실패 | 구체 태그·다이제스트와 배포 커밋 기록 | 같은 커밋 재빌드·실행 | 부분 구현 | 이미지 태그·빌드 구성 존재. 가변 태그·digest/배포 커밋 연결·동일 이미지 재빌드 시험 미완료. [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/Dockerfile) · [Dockerfile](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/Dockerfile) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| DP-O04 | 권장 | 실패 배포 복구 | 이전 이미지와 호환되는 DB 변경 순서 설계 | 이전 버전 복귀 시험 | 미구현 | 이전 이미지 보관·DB 호환 롤백 순서·복귀 시험 없음. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| DP-O05 | 권장 | 볼륨을 백업으로 오해 | 별도 백업과 복원 절차 작성 | 다른 볼륨으로 복원 | 부분 구현 | 볼륨 유지와 데이터 삭제 경고·수동 동시 백업/대조 문서 존재. 복원 가능한 백업 자동화·다른 볼륨 복원 시험 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L28) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L63) |
+| DP-O06 | 권장 | 면접 당일 서비스 중단 | 면접 전 접속·DB·업로드·용량 점검 | 공개 URL에서 실제 시험 결과 기록 | 미구현 | 공개 서비스가 없어 면접 전 공개 URL·업로드·용량 점검 기록 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
 
 Docker 볼륨은 컨테이너 수명과 분리해 데이터를 유지하지만, 호스트 장애에 대한 별도 백업을 대신하지 않는다.
 PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버전 설명을 확인한 뒤 연결한다.
@@ -325,39 +362,39 @@ PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버
 
 ### 10.1 UX·예외 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| GH-U01 | 필수 | 처음 보는 사람이 실행 못 함 | README에 준비물·환경변수·명령·접속 주소 | 새 폴더에서 문서대로 실행 |
-| GH-U02 | 권장 | 개발 오류와 사용자 오류 혼동 | TROUBLESHOOTING에 증상·원인·확인·해결 분리 | DB 연결·413·볼륨 권한 사례 점검 |
-| GH-U03 | 필수 | 제출 링크 누락 | 저장소·배포·고려사항·AI 기록 링크를 모음 | 모든 링크를 새 브라우저에서 확인 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| GH-U01 | 필수 | 처음 보는 사람이 실행 못 함 | README에 준비물·환경변수·명령·접속 주소 | 새 폴더에서 문서대로 실행 | 구현 | 준비물·환경변수·명령·localhost 설명 존재, CI 새 checkout 빌드/시험. 새 환경 전체 Compose 실행 미검증. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
+| GH-U02 | 권장 | 개발 오류와 사용자 오류 혼동 | TROUBLESHOOTING에 증상·원인·확인·해결 분리 | DB 연결·413·볼륨 권한 사례 점검 | 부분 구현 | README/DEC/UX/시험 결과에 오류·복구 설명 있음. 독립 TROUBLESHOOTING·권한 등 모든 사례별 확인 절차 미완료. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
+| GH-U03 | 필수 | 제출 링크 누락 | 저장소·배포·고려사항·AI 기록 링크를 모음 | 모든 링크를 새 브라우저에서 확인 | 부분 구현 | 저장소·가이드·보고서·기록 링크 있음. 공개 배포 링크는 없음. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) · [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) |
 
 ### 10.2 검증·보안 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| GH-S01 | 권장 | 비밀값 커밋 | .env 제외, .env.example은 이름과 예시만 저장 | git diff·추적 파일 확인 |
-| GH-S02 | 권장 | 업로드·개인정보 커밋 | 파일 저장 디렉터리·실제 DB 백업 제외 | 추적 파일에 본문·dump 없음 |
-| GH-S03 | 권장 | 자동화에 배포 비밀 노출 | GitHub Actions Secrets 사용, 로그 출력 금지 | workflow 권한·로그 검사 |
-| GH-S04 | 권장 | 의존성·외부 코드 무검토 수용 | 잠금 파일·공급처·라이선스·보안 경고 확인 | 새 의존성 추가의 근거 기록 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| GH-S01 | 권장 | 비밀값 커밋 | .env 제외, .env.example은 이름과 예시만 저장 | git diff·추적 파일 확인 | 구현 | .env 제외·.env.example 구성 존재. 전체 과거 Git 이력 비밀 스캔은 미실행. [.gitignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.gitignore#L1) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
+| GH-S02 | 권장 | 업로드·개인정보 커밋 | 파일 저장 디렉터리·실제 DB 백업 제외 | 추적 파일에 본문·dump 없음 | 부분 구현 | uploads/pgdata/로그 등 제외·현재 트리에 실제 업로드/DB dump 없음. 임의 *.dump/*.sql 백업의 전역 제외·과거 이력 전수 검사는 없음. [.gitignore](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.gitignore) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
+| GH-S03 | 권장 | 자동화에 배포 비밀 노출 | GitHub Actions Secrets 사용, 로그 출력 금지 | workflow 권한·로그 검사 | 부분 구현 | Actions 최소 contents:read·격리 시험 암호만 사용. 실제 배포 Secrets/배포 경로는 미구성. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml#L8) · [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) |
+| GH-S04 | 권장 | 의존성·외부 코드 무검토 수용 | 잠금 파일·공급처·라이선스·보안 경고 확인 | 새 의존성 추가의 근거 기록 | 부분 구현 | 잠금 파일·라이선스/참고 자료·선택 이유 존재. 지속 보안 감사/취약점 검사 CI 없음. [package-lock.json](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/package-lock.json) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) · [pom.xml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/pom.xml) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
 
 ### 10.3 정책·데이터 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| GH-P01 | 권장 | 큰 변경에 판단 추적 불가 | 기능·시험·문서 단위 커밋 | REQ·점검 ID가 변경과 연결 |
-| GH-P02 | 필수 | 스키마 문서 누락 | 마이그레이션 SQL과 컬럼·제약 설명 저장 | 새 DB 생성 결과와 비교 |
-| GH-P03 | 필수 | AI 입력만 있고 의도 없음 | 원문·의도·결과·검증·수정 이유 기록 | 한 기능의 반복 개선 흐름 추적 |
-| GH-P04 | 필수 | 실제 사용 안 한 도구 기입 | 스킬·플러그인·라이브러리의 작업·이유만 기록 | 기록과 실제 변경 대조 |
-| GH-P05 | 권장 | 회고가 전부 AI의 자기평가 | 본인이 확인·수정·폐기한 내용과 근거 분리 | 잘못된 제안을 잡은 사례 증빙 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| GH-P01 | 권장 | 큰 변경에 판단 추적 불가 | 기능·시험·문서 단위 커밋 | REQ·점검 ID가 변경과 연결 | 구현 | PR1~3 기능·시험·문서 구분과 보고서/항목 연결 존재. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) · [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) |
+| GH-P02 | 필수 | 스키마 문서 누락 | 마이그레이션 SQL과 컬럼·제약 설명 저장 | 새 DB 생성 결과와 비교 | 구현 | V1~V3 SQL·제약·감사/조회 키 설명, 실제 새 DB 통합 시험. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql) · [V2__upload_metadata.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V2__upload_metadata.sql) · [V3__ux_audit_and_upload_lookup.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V3__ux_audit_and_upload_lookup.sql) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) · [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
+| GH-P03 | 필수 | AI 입력만 있고 의도 없음 | 원문·의도·결과·검증·수정 이유 기록 | 한 기능의 반복 개선 흐름 추적 | 구현 | 요청·진행·의도·검증·수정 기록 존재. 전체 개인 대화 로그는 저장소와 별도 유지. [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) |
+| GH-P04 | 필수 | 실제 사용 안 한 도구 기입 | 스킬·플러그인·라이브러리의 작업·이유만 기록 | 기록과 실제 변경 대조 | 구현 | 라이브러리/도구 적용·제외 이유 기록. 실제 변경은 소스/CI와 연결. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L58) · [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) |
+| GH-P05 | 권장 | 회고가 전부 AI의 자기평가 | 본인이 확인·수정·폐기한 내용과 근거 분리 | 잘못된 제안을 잡은 사례 증빙 | 부분 구현 | 오류 발견·수정 근거는 기록. 지원자 본인 확인·폐기·회고 최종 서술은 별도 점검 필요. [PROMPT_LOG.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/PROMPT_LOG.md) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
 
 ### 10.4 운영 관점
 
-| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 |
-|---|---|---|---|---|
-| GH-O01 | 권장 | 시험 안 된 코드 배포 | CI(Continuous Integration, 지속적 통합)에서 빌드·핵심 시험 | 실패한 검사에서 배포 중단 |
-| GH-O02 | 권장 | 시험과 다른 커밋 배포 | 검사 커밋·이미지 태그·배포 커밋 연결 | 세 식별자 일치 확인 |
-| GH-O03 | 권장 | 시험 계획을 성공 결과로 기록 | 미실행·통과·실패·차단됨 상태를 구분 | TEST_RESULTS에 명령·시각·증거 기록 |
-| GH-O04 | 권장 | 제출 이후 변경 추적 | 제출 태그·최종 커밋·알려진 한계 기록 | 면접에서 같은 상태 재현 |
+| ID | 구분 | 가장 작은 고려요소 | 처리 제안 | 검증 방법 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|---|
+| GH-O01 | 권장 | 시험 안 된 코드 배포 | CI(Continuous Integration, 지속적 통합)에서 빌드·핵심 시험 | 실패한 검사에서 배포 중단 | 부분 구현 | 빌드·핵심 시험 CI는 실행·통과. 실제 배포 workflow와 실패 시 배포 중단 연동 없음. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) |
+| GH-O02 | 권장 | 시험과 다른 커밋 배포 | 검사 커밋·이미지 태그·배포 커밋 연결 | 세 식별자 일치 확인 | 미구현 | 공개 배포/이미지 산출물의 식별자가 없어 검사 SHA·이미지·배포 SHA 일치 검증 없음. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| GH-O03 | 권장 | 시험 계획을 성공 결과로 기록 | 미실행·통과·실패·차단됨 상태를 구분 | TEST_RESULTS에 명령·시각·증거 기록 | 구현 | 실행·미실행·실패와 수정 이력, Actions 근거 기록. 과거 실행과 현재 검사를 구분. [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) · [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) |
+| GH-O04 | 권장 | 제출 이후 변경 추적 | 제출 태그·최종 커밋·알려진 한계 기록 | 면접에서 같은 상태 재현 | 부분 구현 | 최종 구현 SHA·한계·보고서 고정 링크 존재. 최종 제출 태그·공개 배포 상태 동결은 미완료. [UX_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/UX_IMPLEMENTATION.md) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/reports/README.md) · [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md) |
 
 ## 11. 권장 DB 구조 초안
 
@@ -405,6 +442,8 @@ PostgreSQL 이미지의 실제 데이터 디렉터리는 선택한 메이저 버
 
 <a id="note-o-03"></a>
 
+> **main 구현 상태: 미구현.** 사용자별 정책·인증·격리 및 허용목록 전환 모두 미구현. 현재 스키마가 id=1로 제한되어 다중 정책 전환 시 마이그레이션도 필요. [V1__policy_schema.sql](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/resources/db/migration/V1__policy_schema.sql#L2) · [PolicyService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/policy/PolicyService.java) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md)
+>
 > **주석 O-03** — **운영 — 향후 확장:** 사용자별 정책은 DEC-01의 범위·권한/방문자 격리 결정, BE-S11·12의 인가·쿠키 인증 시 CSRF 검토, 11절 `policy_scope`/`policy_id` 및 12절 인증·격리 후속 계약과 연결된다. 현재 단일 정책의 DB 필드를 갖췄다는 사실만으로 사용자별 인증·격리가 구현되었다고 볼 수 없다. **화이트리스트(허용목록)는 원문 19절 R10에 ‘과제의 차단목록 요구는 유지하고 허용목록·악성코드 검사는 별도 결정으로 구분’이라고 명시되어 있다.** 다만 전환을 채택한 DEC 번호·전용 상세 항목·직접 필수 REQ는 없다. REQ-10의 적용 방식 변경과 REQ-14의 확장 판단으로 연결해 ‘후속 결정 필요’로 주석 처리한다. 원문 4절의 ‘모두 미선택이면 확장자 정책으로 차단하지 않음’은 현재 차단목록 방식이므로 허용목록의 기본 거부로 조용히 바꿀 수 없다. 전환 시 기본 동작·UI 문구·데이터 이행·회귀 시험을 별도 결정해야 하며 이번 주석 작업으로 채택하지 않는다.
 
 ## 12. API 계약 초안
@@ -449,36 +488,36 @@ REST(Representational State Transfer) 방식의 경로와 HTTP 상태 코드를 
 모든 항목의 **현재 상태는 미실행**이다. 아래 “기대 결과”를 실제 결과로 복사하지 않는다.
 권장 정책은 DEC 항목을 확정한 뒤 시험 기준으로 사용한다.
 
-| 시험 ID | 조건·입력 | 기대 결과 | 관련 항목 |
-|---|---|---|---|
-| T01 | 새 DB로 첫 실행 | 고정 7개 모두 false | REQ-01~02 |
-| T02 | exe 선택 후 새로고침 | true 유지 | REQ-03 |
-| T03 | exe 해제 후 서버 재시작 | false 유지 | DB-O01 |
-| T04 | sh 추가 후 재조회 | 커스텀 목록에 한 건 | REQ-06 |
-| T05 | sh와 SH 동시 추가 | 정규 sh 한 건, 나머지 충돌 | DB-P01 |
-| T06 | ASCII 확장자 20자·21자 | 20자 허용, 21자 거부 | REQ-05 |
-| T07 | 199개에서 서로 다른 두 개 동시 추가 | 최종 200개, 다른 요청 실패 | DB-P03 |
-| T08 | 200개 상태에서 기존 sh 추가 | 중복 오류가 우선 | BE-P03 |
-| T09 | 고정 exe를 커스텀에 입력 | 고정 영역 안내, 자동 선택 안 됨 | DEC-03 |
-| T10 | 커스텀 X 삭제·새로고침 | 목록·DB에서 없음 | REQ-08 |
-| T11 | exe 선택 후 sample.EXE 전송 | 서버 정책 차단, 최종 파일 없음 | REQ-10~11 |
-| T12 | txt 미차단 상태의 정상 txt 전송 | 실제 저장 후 201 | REQ-11 |
-| T13 | 화면 거치지 않고 차단 확장자 API 전송 | 동일 차단 | BE-S01 |
-| T14 | report.exe.txt, archive.tar.gz | DEC-04~05에 따라 txt·gz로 판단 | 이중·복합 확장자 |
-| T15 | README, .env, file. | DEC-06별 사유로 거부 | 특수 파일명 |
-| T16 | ../a.txt 또는 역슬래시 포함 이름 | 경로 이름 거부, 외부 파일 없음 | BE-S03~04 |
-| T17 | 한도 아래·정확히·1바이트 위 | 정확히까지 허용, 초과 413 | DEC-07 |
-| T18 | 0바이트·파일 누락·파일 두 개 | 다른 오류 코드로 거부 | BE-S08~09 |
-| T19 | 이름 jpg + 거짓 MIME + 실제 다른 내용 | 검증 도입 여부에 따른 결과와 한계를 기록 | BE-S05~06 |
-| T20 | 정책 저장 중 DB 중지 | 실패 안내, 화면에 거짓 성공 없음 | DB-U02, FE-U03 |
-| T21 | 탭 A·B 동일 버전으로 편집 | 먼저 저장한 뒤 다른 탭은 412 | DB-P05 |
-| T22 | 업로드 검증 도중 정책 변경 | 기록된 스냅샷 버전대로 처리 | DEC-10 |
-| T23 | 디스크 쓰기 실패 | 성공 응답 없음, PENDING·임시 파일 정리 | BE-O01~02 |
-| T24 | DB 중지 상태 업로드 | 정책 조회 실패로 503, 우회 허용 안 됨 | BE-O03 |
-| T25 | 파일 저장 후 컨테이너 재생성 | 정책·업로드 파일 유지 | DP-P01~02 |
-| T26 | 사용자 파일명이 태그 모양 | 실행되지 않고 텍스트로 표시 | FE-S02 |
-| T27 | 공개 사이트 다른 브라우저로 접속 | 첫 화면·정책 저장·업로드 동작 | REQ-12 |
-| T28 | 같은 Git 커밋으로 새 환경 실행 | 문서대로 동일 동작 | GH-U01, GH-O02 |
+| 시험 ID | 조건·입력 | 기대 결과 | 관련 항목 | main 구현 상태 | 근거·검증 범위·남은 작업 |
+|---|---|---|---|---|---|
+| T01 | 새 DB로 첫 실행 | 고정 7개 모두 false | REQ-01~02 | 구현 | 통과: 새 PostgreSQL 초기 7종 false. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L50) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) |
+| T02 | exe 선택 후 새로고침 | true 유지 | REQ-03 | 구현 | 통과: 실서버 브라우저 선택/새로고침 유지. [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L22) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) |
+| T03 | exe 해제 후 서버 재시작 | false 유지 | DB-O01 | 구현 | 통과: 두 실제 Java 프로세스·같은 PostgreSQL, exe=false/scr=true·버전·ID 유지. [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) |
+| T04 | sh 추가 후 재조회 | 커스텀 목록에 한 건 | REQ-06 | 구현 | 통과: 추가·재조회·실서버 브라우저. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L77) · [verify-restart.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-restart.mjs) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js) |
+| T05 | sh와 SH 동시 추가 | 정규 sh 한 건, 나머지 충돌 | DB-P01 | 부분 구현 | 중복·정규화 및 서로 다른 값 동시 추가 시험은 통과. sh/SH를 정확히 동시에 보내는 시나리오 전용 시험은 없음. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131) |
+| T06 | ASCII 확장자 20자·21자 | 20자 허용, 21자 거부 | REQ-05 | 구현 | 통과: 20자 허용·21자 거부 통합 시험. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) · [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L106) |
+| T07 | 199개에서 서로 다른 두 개 동시 추가 | 최종 200개, 다른 요청 실패 | DB-P03 | 구현 | 통과: 199개에서 동시 추가 결과 201/412, 최종 200개. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L131) |
+| T08 | 200개 상태에서 기존 sh 추가 | 중복 오류가 우선 | BE-P03 | 구현 | 통과: 200개에서 기존 값 재추가 시 중복 오류 우선. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) |
+| T09 | 고정 exe를 커스텀에 입력 | 고정 영역 안내, 자동 선택 안 됨 | DEC-03 | 구현 | 통과: 고정 exe 충돌 안내·자동 활성화 없음. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L96) |
+| T10 | 커스텀 X 삭제·새로고침 | 목록·DB에서 없음 | REQ-08 | 구현 | 통과: 삭제 및 실서버 브라우저 새로고침 후 유지. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L116) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L158) |
+| T11 | exe 선택 후 sample.EXE 전송 | 서버 정책 차단, 최종 파일 없음 | REQ-10~11 | 구현 | 통과: 선택 EXE 직접 API 차단·최종 저장 파일 없음. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| T12 | txt 미차단 상태의 정상 txt 전송 | 실제 저장 후 201 | REQ-11 | 구현 | 통과: 정상 업로드 201·실제 UUID 파일과 메타데이터. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L61) |
+| T13 | 화면 거치지 않고 차단 확장자 API 전송 | 동일 차단 | BE-S01 | 구현 | 통과: 직접 HTTP API 차단·미선택 EXE 허용. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L117) |
+| T14 | report.exe.txt, archive.tar.gz | DEC-04~05에 따라 txt·gz로 판단 | 이중·복합 확장자 | 구현 | 통과: 이중/복합 파일명의 마지막 확장자 판정. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L137) |
+| T15 | README, .env, file. | DEC-06별 사유로 거부 | 특수 파일명 | 구현 | 통과: README/.env/끝 점 오류 코드별 검사. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L132) |
+| T16 | ../a.txt 또는 역슬래시 포함 이름 | 경로 이름 거부, 외부 파일 없음 | BE-S03~04 | 구현 | 통과: 경로/역슬래시 이름 거부·UUID 저장 경로 검사. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L132) · [UploadStorage.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadStorage.java) |
+| T17 | 한도 아래·정확히·1바이트 위 | 정확히까지 허용, 초과 413 | DEC-07 | 구현 | 통과: 실제 HTTP 10 MiB−1/정확히/+1 및 별도 Nginx 12 MiB 초과 계약. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L159) · [verify-proxy.mjs](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/scripts/verify-proxy.mjs) |
+| T18 | 0바이트·파일 누락·파일 두 개 | 다른 오류 코드로 거부 | BE-S08~09 | 구현 | 통과: 누락·빈 파일·복수 파일/추가 필드 구분. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L148) |
+| T19 | 이름 jpg + 거짓 MIME + 실제 다른 내용 | 검증 도입 여부에 따른 결과와 한계를 기록 | BE-S05~06 | 부분 구현 | MIME/내용 검사를 하지 않는 한계는 문서화. 거짓 MIME+다른 내용의 명시 조합 시험은 없음. [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md#L21) · [UploadController.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadController.java) · [UploadService.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/main/java/dev/mina/flow/upload/UploadService.java) |
+| T20 | 정책 저장 중 DB 중지 | 실패 안내, 화면에 거짓 성공 없음 | DB-U02, FE-U03 | 부분 구현 | DB 감사/버전 오류 주입·브라우저 503 모킹 통과. 실제 DB 프로세스 중지와 정책 화면을 함께 검증한 시험은 아님. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L154) · [policy.spec.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/e2e/policy.spec.js#L43) |
+| T21 | 탭 A·B 동일 버전으로 편집 | 먼저 저장한 뒤 다른 탭은 412 | DB-P05 | 부분 구현 | 서버 동일 버전 412 계약 시험 통과. 두 실제 탭 동시 편집 E2E 없음. [PolicyApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/policy/PolicyApiTest.java#L88) · [usePolicy.js](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/usePolicy.js) |
+| T22 | 업로드 검증 도중 정책 변경 | 기록된 스냅샷 버전대로 처리 | DEC-10 | 구현 | 통과: 복사 중 정책 수정 후 기존 스냅샷/다음 요청 새 정책 확인. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L183) |
+| T23 | 디스크 쓰기 실패 | 성공 응답 없음, PENDING·임시 파일 정리 | BE-O01~02 | 부분 구현 | 파일 이동·READY DB 오류 주입 시 정리/롤백 통과. OS 디스크 가득 참·쓰기 권한 오류·강제 종료 전체 복구 실험은 없음. [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L171) · [UploadApiTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadApiTest.java#L177) · [DEC_IMPLEMENTATION.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/DEC_IMPLEMENTATION.md) |
+| T24 | DB 중지 상태 업로드 | 정책 조회 실패로 503, 우회 허용 안 됨 | BE-O03 | 부분 구현 | 정책 조회 예외 주입으로 파일 생성 전 중단·503 확인. 실제 PostgreSQL 프로세스 중지 시험은 아님. [UploadServiceTest.java](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/backend/src/test/java/dev/mina/flow/upload/UploadServiceTest.java#L17) |
+| T25 | 파일 저장 후 컨테이너 재생성 | 정책·업로드 파일 유지 | DP-P01~02 | 미구현 | 영속 볼륨 구성만 존재. 컨테이너 재생성 후 DB·파일 유지 시험 미작성·미실행. [compose.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/compose.yml) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
+| T26 | 사용자 파일명이 태그 모양 | 실행되지 않고 텍스트로 표시 | FE-S02 | 미구현 | JSX 텍스트 표시는 구현. 태그 모양 파일명 전용 실행 방지 화면 시험 미작성·미실행. [UploadPanel.jsx](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/frontend/src/UploadPanel.jsx#L64) |
+| T27 | 공개 사이트 다른 브라우저로 접속 | 첫 화면·정책 저장·업로드 동작 | REQ-12 | 미구현 | 공개 배포·다른 브라우저 외부 접속 시험 미실행. [README.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/README.md#L7) |
+| T28 | 같은 Git 커밋으로 새 환경 실행 | 문서대로 동일 동작 | GH-U01, GH-O02 | 부분 구현 | CI 새 checkout 빌드·시험 통과. README대로 전체 Docker 이미지/Compose 새 환경 재현 시험 미실행. [ci.yml](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/.github/workflows/ci.yml) · [TEST_RESULTS.md](https://github.com/feed-mina/flow_fileupload_AI/blob/707064d7df65118394147a227a15fb44e14c2cec/docs/TEST_RESULTS.md) |
 
 유효한 작은 파일·크기 조절한 텍스트 등 무해한 시험 자료를 사용한다. 실제 악성코드를 내려받거나 실행할 필요는 없다.
 
@@ -592,7 +631,9 @@ REST(Representational State Transfer) 방식의 경로와 HTTP 상태 코드를 
 - [Spring Boot 관리 엔드포인트](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html): 상태 확인과 공개 범위 점검.
 - [GitHub Actions Secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets): 자동화의 비밀값 보관.
 
-## 18. 현재 완료 범위
+## 18. 최초 설계 당시 완료 범위 — 과거 기록
+
+> 아래 목록은 최초 작성 당시 기록이다. 현재 상태는 문서 앞부분의 main 구현 현황과 각 행의 상태 열을 우선한다.
 
 - 완료: 과제 원문 확인, 사용자 기술 선택 반영, 영역 5개 × 관점 4개 점검표, DB·API 초안, 시험 계획, 구현 순서, 기록 양식 작성.
 - 미완료: DEC 제안 확정, 애플리케이션 구현, 자동 검사 실행, 실제 배포.
@@ -659,7 +700,7 @@ Ant Design을 우선 제안하고 shadcn/ui는 대안·디자인 참고, react-d
 - [fix md 보고서](2026-10-23/flow-ui-research-20261023-105551-fix.md): 예상 GUI·진행 흐름·관계도·108개 개별 적용표.
 - [fix html 보고서](2026-10-23/flow-ui-research-20261023-105551-fix.html): 예상 GUI·진행 흐름·관계도·108개 개별 적용표.
 
-예정 파일은 아직 구현된 앱 파일이 아니다. UI 연구와 문서는 완료했으며 앱 구현·28개 시험·배포는 미착수다. 보고서 검수와 앱 동작 시험은 별도로 기록한다.
+위 예정 파일은 최초 리서치 당시의 후보 경로다. 현재 실제 파일은 20~22절 및 각 상태 열의 근거 링크를 따른다. 앱 구현은 진행되어 있으며 전체 28개 시험·공개 배포가 모두 완료된 것은 아니다. 보고서 검수와 앱 동작 시험은 별도로 기록한다.
 
 ### 19.4 다음 작업 하나
 
